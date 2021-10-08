@@ -1,4 +1,4 @@
-import { readFileSync, writeFileSync } from 'fs';
+// import { readFileSync, writeFileSync } from 'fs';
 import { join } from 'path';
 import { commands, ExtensionContext, extensions, window, workspace } from 'vscode';
 
@@ -29,34 +29,34 @@ export class TsPlugin {
         return workspace.getConfiguration('svelte').get<boolean>('enable-ts-plugin') ?? false;
     }
 
-    private toggleTsPlugin(enable: boolean) {
+    private async toggleTsPlugin(enable: boolean) {
         const extension = extensions.getExtension('svelte.svelte-vscode');
         if (!extension) {
             // This shouldn't be possible
             return;
         }
 
-        const packageJson = join(extension.extensionPath, 'package.json');
-        const enabled = '"typescriptServerPlugins"';
-        const disabled = '"typescriptServerPlugins-disabled"';
-        try {
-            const packageText = readFileSync(packageJson, 'utf8');
-            if (packageText.includes(disabled) && enable) {
-                const newText = packageText.replace(disabled, enabled);
-                writeFileSync(packageJson, newText, 'utf8');
-                this.showReload(true);
-            } else if (packageText.includes(enabled) && !enable) {
-                const newText = packageText.replace(enabled, disabled);
-                writeFileSync(packageJson, newText, 'utf8');
-                this.showReload(false);
-            } else if (!packageText.includes(enabled) && !packageText.includes(disabled)) {
-                window.showWarningMessage('Unknown Svelte for VS Code package.json status.');
-            }
-        } catch (err) {
-            window.showWarningMessage(
-                'Svelte for VS Code package.json update failed, TypeScript plugin could not be toggled.'
-            );
-        }
+        // const packageJson = join(extension.extensionPath, 'package.json');
+        // const enabled = '"typescriptServerPlugins"';
+        // const disabled = '"typescriptServerPlugins-disabled"';
+        // try {
+        //     const packageText = readFileSync(packageJson, 'utf8');
+        //     if (packageText.includes(disabled) && enable) {
+        //         const newText = packageText.replace(disabled, enabled);
+        //         writeFileSync(packageJson, newText, 'utf8');
+        //         this.showReload(true);
+        //     } else if (packageText.includes(enabled) && !enable) {
+        //         const newText = packageText.replace(enabled, disabled);
+        //         writeFileSync(packageJson, newText, 'utf8');
+        //         this.showReload(false);
+        //     } else if (!packageText.includes(enabled) && !packageText.includes(disabled)) {
+        //         window.showWarningMessage('Unknown Svelte for VS Code package.json status.');
+        //     }
+        // } catch (err) {
+        //     window.showWarningMessage(
+        //         'Svelte for VS Code package.json update failed, TypeScript plugin could not be toggled.'
+        //     );
+        // }
     }
 
     private async showReload(enabled: boolean) {
