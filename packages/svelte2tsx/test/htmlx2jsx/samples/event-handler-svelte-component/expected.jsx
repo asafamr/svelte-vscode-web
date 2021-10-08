@@ -1,0 +1,1 @@
+<><sveltecomponent this={Whatever}  />{__sveltets_1_instanceOf(__sveltets_1_componentType()).$on('submit', handleSubmit)}</>

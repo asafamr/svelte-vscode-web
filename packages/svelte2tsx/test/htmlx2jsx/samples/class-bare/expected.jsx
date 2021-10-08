@@ -1,0 +1,1 @@
+<><h1 {...__sveltets_1_ensureType(Boolean, !!(active))}>Hello</h1></>

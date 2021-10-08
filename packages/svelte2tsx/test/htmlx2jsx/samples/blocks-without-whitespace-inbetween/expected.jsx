@@ -1,0 +1,1 @@
+<>{(name == "world") ? <>!</> : <></>}{__sveltets_1_each(x, (y) => <>!</>)}{() => {let _$$p = (x); __sveltets_1_awaitThen(_$$p, (y) => {<>!</>})}}{(bla) ? <>*</> : <></>}</>
