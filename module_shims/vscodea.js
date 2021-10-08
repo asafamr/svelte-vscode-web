@@ -1,0 +1,1 @@
+exports = require((0,'vscode')/*prevents bundling*/)
