@@ -16,7 +16,7 @@ const moduleShimmer: esbuild.Plugin = {
 
     const moduleShims = Object.fromEntries(
       readdirSync(path.resolve(__dirname, "module_shims")).map((filename) => [
-        filename.replace(".js", ""),
+        filename.replace(".ts", ""),
         readFileSync(path.resolve(__dirname, "module_shims", filename)).toString(),
       ])
     );
@@ -30,7 +30,7 @@ const moduleShimmer: esbuild.Plugin = {
 
     build.onLoad({ filter: /.*/, namespace: moduleShimmerName }, (args) => {
       const contents = moduleShims[args.path];
-      return { contents };
+      return { contents, loader:'ts', resolveDir:'node_modules' };
     });
   },
 };
