@@ -29,7 +29,7 @@ import { LanguageClient, ServerOptions, TransportKind } from 'vscode-languagecli
 import CompiledCodeContentProvider from '../../vendored/langauge-tools/packages/svelte-vscode/src/CompiledCodeContentProvider';
 import { activateTagClosing } from '../../vendored/langauge-tools/packages/svelte-vscode/src/html/autoClose';
 import { EMPTY_ELEMENTS } from '../../vendored/langauge-tools/packages/svelte-vscode/src/html/htmlEmptyTagsShared';
-import { TsPlugin } from '../../vendored/langauge-tools/packages/svelte-vscode/src/tsplugin';
+// import { TsPlugin } from '../../vendored/langauge-tools/packages/svelte-vscode/src/tsplugin';
 
 namespace TagCloseRequest {
     export const type: RequestType<TextDocumentPositionParams, string, any> = new RequestType(
@@ -175,7 +175,7 @@ export function activate(context: ExtensionContext) {
 
     addExtracComponentCommand(getLS, context);
 
-    TsPlugin.create(context);
+    // TsPlugin.create(context);
 
     languages.setLanguageConfiguration('svelte', {
         indentationRules: {
