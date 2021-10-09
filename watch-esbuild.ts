@@ -36,12 +36,13 @@ const moduleShimmer: esbuild.Plugin = {
 };
 
 esbuild.build({
-  entryPoints: ["src/web/extension.ts"],
-  outfile: "dist/web/extension.js",
+  entryPoints: ["src/web/extension.ts","src/web/server.ts"],
+  outdir: "dist/web/",
   bundle: true,
   format: "cjs",
   external: ["vscode"],
   sourcemap:"both",
+  platform:"browser",
   sourcesContent:false,
   plugins: [moduleShimmer],
   watch: {
