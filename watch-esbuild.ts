@@ -41,6 +41,8 @@ esbuild.build({
   bundle: true,
   format: "cjs",
   external: ["vscode"],
+  sourcemap:"both",
+  sourcesContent:false,
   plugins: [moduleShimmer],
   watch: {
     onRebuild(error, result) {
