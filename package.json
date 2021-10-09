@@ -401,7 +401,7 @@
 			{
 				"language": "svelte",
 				"scopeName": "source.svelte",
-				"path": "./syntaxes/svelte.tmLanguage.json",
+				"path": "./vendored/langauge-tools/packages/svelte-vscode/syntaxes/svelte.tmLanguage.json",
 				"embeddedLanguages": {
 					"text.html.basic": "html",
 					"text.html.markdown": "markdown",
@@ -419,7 +419,7 @@
 			},
 			{
 				"scopeName": "svelte.pug",
-				"path": "./syntaxes/pug-svelte.json",
+				"path": "./vendored/langauge-tools/packages/svelte-vscode/syntaxes/pug-svelte.json",
 				"injectTo": [
 					"source.svelte"
 				],
@@ -430,7 +430,7 @@
 			},
 			{
 				"scopeName": "svelte.pug.tags",
-				"path": "./syntaxes/pug-svelte-tags.json",
+				"path": "./vendored/langauge-tools/packages/svelte-vscode/syntaxes/pug-svelte-tags.json",
 				"injectTo": [
 					"source.svelte"
 				],
@@ -441,7 +441,7 @@
 			},
 			{
 				"scopeName": "svelte.pug.dotblock",
-				"path": "./syntaxes/pug-svelte-dotblock.json",
+				"path": "./vendored/langauge-tools/packages/svelte-vscode/syntaxes/pug-svelte-dotblock.json",
 				"injectTo": [
 					"source.svelte"
 				],
@@ -451,7 +451,7 @@
 			},
 			{
 				"scopeName": "markdown.svelte.codeblock",
-				"path": "./syntaxes/markdown-svelte.json",
+				"path": "./vendored/langauge-tools/packages/svelte-vscode/syntaxes/markdown-svelte.json",
 				"injectTo": [
 					"text.html.markdown"
 				],
@@ -461,7 +461,7 @@
 			},
 			{
 				"scopeName": "source.css.postcss",
-				"path": "./syntaxes/postcss.json",
+				"path": "./vendored/langauge-tools/packages/svelte-vscode/syntaxes/postcss.json",
 				"injectTo": [
 					"source.svelte"
 				]
@@ -533,6 +533,7 @@
 		"@typescript-eslint/parser": "^4.31.1",
 		"@vscode/test-web": "^0.0.13",
 		"assert": "^2.0.0",
+		"buffer": "^5.7.1",
 		"esbuild": "^0.13.4",
 		"esbuild-register": "^3.0.0",
 		"eslint": "^7.32.0",
