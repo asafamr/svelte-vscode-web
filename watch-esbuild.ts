@@ -8,7 +8,6 @@ const moduleShimmerName = "ModuleShimmer";
 const moduleShimmer: esbuild.Plugin = {
   name: moduleShimmerName,
   setup(build: esbuild.PluginBuild) {
-
     // https://stackoverflow.com/questions/3561493/is-there-a-regexp-escape-function-in-javascript
     function escapeRegex(string) {
       return string.replace(/[-\/\\^$*+?.()|[\]{}]/g, "\\$&");
@@ -30,26 +29,45 @@ const moduleShimmer: esbuild.Plugin = {
 
     build.onLoad({ filter: /.*/, namespace: moduleShimmerName }, (args) => {
       const contents = moduleShims[args.path];
-      return { contents, loader:'ts', resolveDir:'node_modules' };
+      return { contents, loader: "ts", resolveDir: "node_modules" };
     });
   },
 };
 
 esbuild.build({
-  entryPoints: ["src/web/extension.ts","src/web/server.ts"],
+  entryPoints: ["src/web/extension.ts"],
   outdir: "dist/web/",
   bundle: true,
   format: "cjs",
   external: ["vscode"],
-  sourcemap:"both",
-  platform:"browser",
-  sourcesContent:false,
-  plugins: [moduleShimmer],
+  sourcemap: "inline",
+  platform: "browser",
+  sourcesContent: true,
+  // plugins: [moduleShimmer],
   watch: {
     onRebuild(error, result) {
-      if (error) console.error("watch build failed:", error);
-      else console.log("watch build succeeded:", result);
+      if (error) console.error("watch build failed:", JSON.stringify(error));
+      else console.log("watch build succeeded:", JSON.stringify(result));
     },
-    
+  },
+});
+esbuild.build({
+  entryPoints: ["src/web/server.ts"],
+  outdir: "dist/web/",
+  bundle: true,
+  format: "iife",
+  // external: ["vscode"],
+  sourcemap: "inline",
+  // sourcesContent: false,
+  // inject:["src/web/shim_injected.ts"],
+  define: { global: "self", __dirname: '""', define: "null", window: "self", 'Function':"mockFunction" },
+  platform: "browser",
+  plugins: [moduleShimmer],
+  // banner:{js:'self.require=getRequireShim();'},
+  watch: {
+    onRebuild(error, result) {
+      if (error) console.error("watch build failed:", JSON.stringify(error));
+      else console.log("watch build succeeded:", JSON.stringify(result));
+    },
   },
 });
