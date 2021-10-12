@@ -60,7 +60,7 @@ esbuild.build({
   sourcemap: "inline",
   // sourcesContent: false,
   // inject:["src/web/shim_injected.ts"],
-  define: { global: "self", __dirname: '""', define: "null", window: "self", 'Function':"mockFunction" },
+  define: { global: "self", __dirname: '""', define: "null", window: "self", 'Function':"errorOnFunction" },
   platform: "browser",
   plugins: [moduleShimmer],
   // banner:{js:'self.require=getRequireShim();'},

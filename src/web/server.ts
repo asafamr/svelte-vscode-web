@@ -26,6 +26,9 @@ console.log("running server svelte");
 
 declare var self: any;
 
+configLoader.getConfig = (x) => undefined;
+configLoader.awaitConfig = () => Promise.resolve(undefined);
+configLoader.loadConfigs = () => Promise.resolve();
 
 const messageReader = new BrowserMessageReader(self);
 const messageWriter = new BrowserMessageWriter(self);
@@ -169,7 +172,6 @@ import { FallbackWatcher } from "../../vendored/langauge-tools/packages/language
 // import { configLoader } from '../../vendored/langauge-tools/packages/language-server/src/lib/documents/configLoader';
 import { setIsTrusted } from "../../vendored/langauge-tools/packages/language-server/src/importPackage";
 
-
 export interface LSOptions {
   /**
    * If you have a connection already that the ls should use, pass it in.
@@ -219,8 +221,8 @@ function startServer(options?: LSOptions) {
     Logger.log("Initialize language server at ", workspaceUris.join(", "));
     if (workspaceUris.length === 0) {
       Logger.error("No workspace path set");
-    }else{
-      process.chdir(new URL(workspaceUris[0]).pathname)
+    } else {
+      process.chdir(new URL(workspaceUris[0]).pathname);
     }
 
     if (!evt.capabilities.workspace?.didChangeWatchedFiles) {
@@ -398,7 +400,9 @@ function startServer(options?: LSOptions) {
     pluginHost.getCompletions(evt.textDocument, evt.position, evt.context, cancellationToken)
   );
   connection.onDocumentFormatting((evt) => pluginHost.formatDocument(evt.textDocument, evt.options));
-  connection.onRequest(new RequestType("html/tag"), (evt:any) => pluginHost.doTagComplete(evt.textDocument, evt.position));
+  connection.onRequest(new RequestType("html/tag"), (evt: any) =>
+    pluginHost.doTagComplete(evt.textDocument, evt.position)
+  );
   connection.onDocumentColor((evt) => pluginHost.getDocumentColors(evt.textDocument));
   connection.onColorPresentation((evt) => pluginHost.getColorPresentations(evt.textDocument, evt.range, evt.color));
   connection.onDocumentSymbol((evt, cancellationToken) =>
@@ -418,7 +422,7 @@ function startServer(options?: LSOptions) {
     } else if (result) {
       connection?.sendNotification(ShowMessageNotification.type.method, {
         message: result,
-        type: MessageType.Error, 
+        type: MessageType.Error,
       });
     }
   });
