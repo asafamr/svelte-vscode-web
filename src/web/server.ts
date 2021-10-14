@@ -26,9 +26,7 @@ console.log("running server svelte");
 
 declare var self: any;
 
-configLoader.getConfig = (x) => undefined;
-configLoader.awaitConfig = () => Promise.resolve(undefined);
-configLoader.loadConfigs = () => Promise.resolve();
+
 
 const messageReader = new BrowserMessageReader(self);
 const messageWriter = new BrowserMessageWriter(self);
@@ -169,7 +167,6 @@ import {
   urlToPath,
 } from "../../vendored/langauge-tools/packages/language-server/src/utils";
 import { FallbackWatcher } from "../../vendored/langauge-tools/packages/language-server/src/lib/FallbackWatcher";
-// import { configLoader } from '../../vendored/langauge-tools/packages/language-server/src/lib/documents/configLoader';
 import { setIsTrusted } from "../../vendored/langauge-tools/packages/language-server/src/importPackage";
 
 export interface LSOptions {

@@ -31,6 +31,7 @@ const moduleShimmer: esbuild.Plugin = {
       const contents = moduleShims[args.path];
       return { contents, loader: "ts", resolveDir: "node_modules" };
     });
+    
   },
 };
 
@@ -58,9 +59,12 @@ esbuild.build({
   format: "iife",
   // external: ["vscode"],
   sourcemap: "inline",
+  loader:{
+    ".d.ts":'text'
+  },
   // sourcesContent: false,
   // inject:["src/web/shim_injected.ts"],
-  define: { global: "self", __dirname: '""', define: "null", window: "self", 'Function':"errorOnFunction" },
+  define: { global: "self", __dirname: '""', define: "null", window: "self", 'Function':"_Function", 'importScripts':"_importScripts","Buffer":"_Buffer" },
   platform: "browser",
   plugins: [moduleShimmer],
   // banner:{js:'self.require=getRequireShim();'},
