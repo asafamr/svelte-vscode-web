@@ -1,6 +1,6 @@
 out
 dist
-tmp
+tmp.*
 node_modules
 .vscode-test-web/
 *.vsix

@@ -8,7 +8,7 @@ import {
     RequestType,
     RevealOutputChannelOn,
     TextDocumentEdit,
-    TextDocumentPositionParams,
+    // TextDocumentPositionParams,
     WorkspaceEdit as LSWorkspaceEdit
 } from 'vscode-languageclient';
 
