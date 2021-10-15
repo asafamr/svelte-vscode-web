@@ -41,6 +41,7 @@ const required = {
 };
 const thorwing = {
   "./node_modules/@microsoft/typescript-etw": true,
+  "svelte-native/package.json": true
 };
 
 _self.require = function (req: string) {

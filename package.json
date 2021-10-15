@@ -514,7 +514,8 @@
 		]
 	},
 	"scripts": {
-		"watch-web": "node -r esbuild-register watch-esbuild.ts",
+		"dev-watch": "node -r esbuild-register build.ts --dev",
+		"compile": "rm -rf ./dist/web && node -r esbuild-register build.ts",
 		"bootstrap": "cd vendored/langauge-tools/packages/svelte-vscode && npm run build:grammar",
 		"run-in-browser": "vscode-test-web --browserType=chromium --extensionDevelopmentPath=. .",
 		"test": "echo oldstuff || vscode-test-web --browserType=chromium --extensionDevelopmentPath=. --extensionTestsPath=dist/web/test/suite/index.js",

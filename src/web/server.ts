@@ -264,7 +264,8 @@ function startServer(options?: LSOptions) {
           docManager,
           workspaceUris.map(normalizeUri),
           configManager,
-          notifyTsServiceExceedSizeLimit
+          notifyTsServiceExceedSizeLimit,
+          false, "/tsconfig.json"
         )
       )
     );

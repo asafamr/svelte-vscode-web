@@ -3,6 +3,12 @@ import * as esbuild from "esbuild";
 import { readdirSync, readFileSync } from "fs";
 import path from "path";
 
+const dev = process.argv.includes('--dev')
+
+const sourcesContent = dev
+const sourcemap = dev ? 'inline': false
+const minify = !dev
+
 // this plugin loads js files from the module_shims dirs and use them as modules
 const moduleShimmerName = "ModuleShimmer";
 const moduleShimmer: esbuild.Plugin = {
@@ -40,12 +46,13 @@ esbuild.build({
   outdir: "dist/web/",
   bundle: true,
   format: "cjs",
+  minify,
   external: ["vscode"],
-  sourcemap: "inline",
+  sourcemap,
   platform: "browser",
-  sourcesContent: true,
+  sourcesContent,
   // plugins: [moduleShimmer],
-  watch: {
+  watch: dev && {
     onRebuild(error, result) {
       if (error) console.error("watch build failed:", JSON.stringify(error));
       else console.log("watch build succeeded:", JSON.stringify(result));
@@ -56,19 +63,20 @@ esbuild.build({
   entryPoints: ["src/web/server.ts"],
   outdir: "dist/web/",
   bundle: true,
+  minify,
   format: "iife",
   // external: ["vscode"],
-  sourcemap: "inline",
+  sourcemap,
   loader:{
     ".d.ts":'text'
   },
-  // sourcesContent: false,
+  sourcesContent,
   // inject:["src/web/shim_injected.ts"],
   define: { global: "self", __dirname: '""', define: "null", window: "self", 'Function':"_Function", 'importScripts':"_importScripts","Buffer":"_Buffer" },
   platform: "browser",
   plugins: [moduleShimmer],
   // banner:{js:'self.require=getRequireShim();'},
-  watch: {
+  watch: dev && {
     onRebuild(error, result) {
       if (error) console.error("watch build failed:", JSON.stringify(error));
       else console.log("watch build succeeded:", JSON.stringify(result));
