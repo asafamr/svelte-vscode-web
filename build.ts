@@ -2,12 +2,10 @@ import * as esbuild from "esbuild";
 
 import { readdirSync, readFileSync } from "fs";
 import path from "path";
-import { writeFile,readFile } from "fs/promises";
-import lzs from "lz-string"
-import dedent from "dedent"
+import { writeFile, readFile } from "fs/promises";
+import lzs from "lz-string";
 
 const dev = process.argv.includes("--dev");
-const verboseStats = true || process.argv.includes("--verbose");
 
 const sourcesContent = dev;
 const sourcemap = dev ? "inline" : false;
@@ -31,13 +29,12 @@ const moduleShimmer: esbuild.Plugin = {
     );
 
     // prevents bundling unused parsers
-    build.onLoad({filter:/prettier\/standalone/}, async (args)=>{
-      const contentsBuffer = await readFile(args.path)
-      const contents = contentsBuffer.toString().replace(/require\(\"/g,'rekuire("')
+    build.onLoad({ filter: /prettier\/standalone/ }, async (args) => {
+      const contentsBuffer = await readFile(args.path);
+      const contents = contentsBuffer.toString().replace(/require\(\"/g, 'rekuire("');
       // writeFile('test.js', contents)
-      return {contents}
-    })
-
+      return { contents };
+    });
 
     // w/o this webCustomData.js included twice - as umd and as esm
     build.onResolve({ filter: /.*vscode-html-languageservice.*webCustomData/ }, (args) => {
@@ -57,10 +54,10 @@ const moduleShimmer: esbuild.Plugin = {
     });
 
     // temporary - d.ts's can be fetched asyncly
-    build.onLoad({filter:/\.d\.ts$/}, async args=>{
-      const content = await readFile(args.path)
-      return { contents:lzs.compressToBase64(content.toString()),loader:"text"}
-    })
+    build.onLoad({ filter: /\.d\.ts$/ }, async (args) => {
+      const content = await readFile(args.path);
+      return { contents: lzs.compressToBase64(content.toString()), loader: "text" };
+    });
   },
 };
 
@@ -76,7 +73,7 @@ esbuild
     platform: "browser",
     treeShaking: true,
     sourcesContent,
-    metafile: true,
+    metafile: !dev,
     plugins: [moduleShimmer],
     watch: dev && {
       onRebuild(error, result) {
@@ -86,10 +83,14 @@ esbuild
     },
   })
   .then(async (built) => {
-    writeFile("tmp.extstats.txt", 
-    await esbuild.analyzeMetafile(built.metafile, { verbose: false })
-    +'\n\n\n'+
-    await esbuild.analyzeMetafile(built.metafile, { verbose: true }));
+    if (!dev) {
+      writeFile(
+        "tmp.extstats.txt",
+        (await esbuild.analyzeMetafile(built.metafile, { verbose: false })) +
+          "\n\n\n" +
+          (await esbuild.analyzeMetafile(built.metafile, { verbose: true }))
+      );
+    }
   });
 esbuild
   .build({
@@ -97,7 +98,7 @@ esbuild
     outdir: "dist/web/",
     bundle: true,
     minify,
-    metafile: true,
+    metafile: !dev,
     format: "iife",
     // external: ["vscode"],
     sourcemap,
@@ -127,8 +128,12 @@ esbuild
     },
   })
   .then(async (built) => {
-    writeFile("tmp.serverstats.txt", 
-    await esbuild.analyzeMetafile(built.metafile, { verbose: false })
-    +'\n\n\n'+
-    await esbuild.analyzeMetafile(built.metafile, { verbose: true }));
+    if (!dev) {
+      writeFile(
+        "tmp.serverstats.txt",
+        (await esbuild.analyzeMetafile(built.metafile, { verbose: false })) +
+          "\n\n\n" +
+          (await esbuild.analyzeMetafile(built.metafile, { verbose: true }))
+      );
+    }
   });
