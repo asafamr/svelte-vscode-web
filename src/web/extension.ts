@@ -14,6 +14,7 @@ import {
 
 import {
     commands,
+    Disposable,
     ExtensionContext,
     // extensions,
     IndentAction,
@@ -36,9 +37,17 @@ import CompiledCodeContentProvider from '../../vendored/langauge-tools/packages/
 
 Buffer = require('buffer').Buffer
 
+let disposables:Disposable[] = [];
+
+function dispose(){
+    for(const d of disposables){
+        d.dispose();
+    }
+    disposables = [];
+}
 // this method is called when vs code is activated
 export function activate(context: ExtensionContext) {
-
+    context.subscriptions.push({dispose})
 	console.log('svelte client activation');
 
 	/* 
@@ -46,7 +55,6 @@ export function activate(context: ExtensionContext) {
 	 * and couuld be shared with a regular (Node) extension
 	 */
 	const documentSelector = [{ language: 'plaintext' }];
-
 	const clientOptions: LanguageClientOptions = {
         documentSelector: [{ scheme: 'file', language: 'svelte' }],
         revealOutputChannelOn: RevealOutputChannelOn.Never,
@@ -72,10 +80,10 @@ export function activate(context: ExtensionContext) {
         if (
             [
                 'tsconfig.json',
-                'jsconfig.json',
-                'svelte.config.js',
-                'svelte.config.cjs',
-                'svelte.config.mjs'
+                // 'jsconfig.json',
+                // 'svelte.config.js',
+                // 'svelte.config.cjs',
+                // 'svelte.config.mjs'
             ].includes(parts[parts.length - 1])
         ) {
             await restartLS(false);
@@ -94,7 +102,8 @@ export function activate(context: ExtensionContext) {
 	let ls = createWorkerLanguageClient(context, clientOptions);
 
 	const disposable = ls.start();
-	context.subscriptions.push(disposable);
+
+	disposables.push(disposable);
 
 	ls.onReady().then(() => {
 		console.log('svelte-web-ext server is ready');
@@ -111,16 +120,17 @@ export function activate(context: ExtensionContext) {
             { svelte: true },
             'html.autoClosingTags'
         );
-        context.subscriptions.push(disposable);
+        disposables.push(disposable);
 	});
 
-    context.subscriptions.push(
+    disposables.push(
         commands.registerCommand('svelte.restartLanguageServer', async () => {
             await restartLS(true);
         })
     );
 
     let restartingLs = false;
+    let lsDisposable:Disposable;
     async function restartLS(showNotification: boolean) {
         if (restartingLs) {
             return;
@@ -128,12 +138,14 @@ export function activate(context: ExtensionContext) {
 
         restartingLs = true;
         await ls.stop();
+        dispose();
         ls = createWorkerLanguageClient(context, clientOptions);
-        context.subscriptions.push(ls.start());
+        lsDisposable = ls.start();
+        disposables.push(lsDisposable);
         await ls.onReady();
-        if (showNotification) {
+        if (showNotification) { 
             window.showInformationMessage('Svelte language server restarted.');
-        }
+        } 
         restartingLs = false;
     }
 
@@ -309,7 +321,7 @@ function addRenameFileListener(getLS: () => LanguageClient) {
 function addCompilePreviewCommand(getLS: () => LanguageClient, context: ExtensionContext) {
     const compiledCodeContentProvider = new CompiledCodeContentProvider(getLS as any);
 
-    context.subscriptions.push(
+    disposables.push(
         workspace.registerTextDocumentContentProvider(
             CompiledCodeContentProvider.scheme,
             compiledCodeContentProvider
@@ -317,7 +329,7 @@ function addCompilePreviewCommand(getLS: () => LanguageClient, context: Extensio
         compiledCodeContentProvider
     );
 
-    context.subscriptions.push(
+    disposables.push(
         commands.registerTextEditorCommand('svelte.showCompiledCodeToSide', async (editor) => {
             if (editor?.document?.languageId !== 'svelte') {
                 return;
@@ -339,7 +351,7 @@ function addCompilePreviewCommand(getLS: () => LanguageClient, context: Extensio
 }
 
 function addExtracComponentCommand(getLS: () => LanguageClient, context: ExtensionContext) {
-    context.subscriptions.push(
+    disposables.push(
         commands.registerTextEditorCommand('svelte.extractComponent', async (editor) => {
             if (editor?.document?.languageId !== 'svelte') {
                 return;
