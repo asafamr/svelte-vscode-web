@@ -25,8 +25,10 @@ npm run bootstrap
 start esbuild watch with `npm run dev-watch`
 
 then either:
-run in vscode with `F5` or
-run in browser with `npm run run-in-browser`
+
+run in vscode with `F5` (debug with electorn dev tools - ctrl+shift+I) or
+
+run in browser with `npm run run-in-browser` (debug with browser dev tools)
 
 
 compile minified with `npm run compile` - this also writes some bundle size info to txt files

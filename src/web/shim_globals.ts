@@ -3,7 +3,7 @@ const _self = self as any;
 import "./preshim";
 //@ts-ignore
 import ts from "typescript";
-import { createSystem } from "@typescript/vfs";
+import { createSystem } from "../../vendored/ts-vfs";
 import { configLoader } from "../../vendored/langauge-tools/packages/language-server/src/lib/documents/configLoader";
 
 // import * as vscode from 'vscode';
@@ -27,6 +27,7 @@ import { version as prettierVersion } from "prettier/package.json";
 import { version as svelteVersion } from "svelte/package.json";
 import { version as preprocess_version } from "svelte-preprocess/package.json";
 
+// const vscode = require('vscode')
 const required = {
   "prettier/package.json": { version: prettierVersion },
   "svelte/package.json": { version: svelteVersion },
@@ -55,55 +56,6 @@ _self.require = function (req: string) {
 };
 _self.require.resolve = (x: any) => x;
 const fsMap = new Map<string, string>();
-
-import { decompressFromBase64 } from "lz-string";
-
-// esbuild loader d.ts as raw text
-fsMap.set("/lib.es2015.d.ts", decompressFromBase64(require("typescript/lib/lib.es2015.d.ts")) ?? "");
-fsMap.set(
-  "/lib.es2015.collection.d.ts",
-  decompressFromBase64(require("typescript/lib/lib.es2015.collection.d.ts")) ?? ""
-);
-fsMap.set("/lib.es2015.core.d.ts", decompressFromBase64(require("typescript/lib/lib.es2015.core.d.ts")) ?? "");
-fsMap.set(
-  "/lib.es2015.generator.d.ts",
-  decompressFromBase64(require("typescript/lib/lib.es2015.generator.d.ts")) ?? ""
-);
-fsMap.set("/lib.es2015.iterable.d.ts", decompressFromBase64(require("typescript/lib/lib.es2015.iterable.d.ts")) ?? "");
-fsMap.set("/lib.es2015.promise.d.ts", decompressFromBase64(require("typescript/lib/lib.es2015.promise.d.ts")) ?? "");
-fsMap.set("/lib.es2015.proxy.d.ts", decompressFromBase64(require("typescript/lib/lib.es2015.proxy.d.ts")) ?? "");
-fsMap.set("/lib.es2015.reflect.d.ts", decompressFromBase64(require("typescript/lib/lib.es2015.reflect.d.ts")) ?? "");
-fsMap.set("/lib.es2015.symbol.d.ts", decompressFromBase64(require("typescript/lib/lib.es2015.symbol.d.ts")) ?? "");
-fsMap.set(
-  "/lib.es2015.symbol.wellknown.d.ts",
-  decompressFromBase64(require("typescript/lib/lib.es2015.symbol.wellknown.d.ts")) ?? ""
-);
-fsMap.set("/lib.es5.d.ts", decompressFromBase64(require("typescript/lib/lib.es5.d.ts")) ?? "");
-fsMap.set("/lib.dom.d.ts", decompressFromBase64(require("typescript/lib/lib.dom.d.ts")) ?? "");
-
-fsMap.set(
-  "/lib/svelte-shims.d.ts",
-  decompressFromBase64(require("../../vendored/langauge-tools/packages/svelte2tsx/svelte-shims.d.ts")) ?? ""
-);
-fsMap.set(
-  "/lib/svelte-jsx.d.ts",
-  decompressFromBase64(require("../../vendored/langauge-tools/packages/svelte2tsx/svelte-jsx.d.ts")) ?? ""
-);
-fsMap.set(
-  "/lib/svelte-native-jsx.d.ts",
-  decompressFromBase64(require("../../vendored/langauge-tools/packages/svelte2tsx/svelte-native-jsx.d.ts")) ?? ""
-);
-fsMap.set(
-  "/tsconfig.json",
-  JSON.stringify({
-    compilerOptions: {
-      lib: ["DOM", "ES2015"],
-      module: "ES6",
-      target: "ES6",
-      rootDir: "/",
-    },
-  })
-);
 
 //@ts-ignore
 ts.sys = createSystem(fsMap);

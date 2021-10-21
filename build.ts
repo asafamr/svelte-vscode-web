@@ -2,8 +2,7 @@ import * as esbuild from "esbuild";
 
 import { readdirSync, readFileSync } from "fs";
 import path from "path";
-import { writeFile, readFile } from "fs/promises";
-import lzs from "lz-string";
+import { writeFile, readFile, mkdir, readdir, copyFile } from "fs/promises";
 
 const dev = process.argv.includes("--dev");
 
@@ -53,11 +52,11 @@ const moduleShimmer: esbuild.Plugin = {
       return { contents, loader: "ts", resolveDir: "node_modules" };
     });
 
-    // temporary - d.ts's can be fetched asyncly
-    build.onLoad({ filter: /\.d\.ts$/ }, async (args) => {
-      const content = await readFile(args.path);
-      return { contents: lzs.compressToBase64(content.toString()), loader: "text" };
-    });
+    // not used - d.ts's can be fetched asyncly
+    // build.onLoad({ filter: /\.d\.ts$/ }, async (args) => {
+    //   const content = await readFile(args.path);
+    //   return { contents: lzs.compressToBase64(content.toString()), loader: "text" };
+    // });
   },
 };
 
@@ -128,6 +127,7 @@ esbuild
     },
   })
   .then(async (built) => {
+    copyLibs();
     if (!dev) {
       writeFile(
         "tmp.serverstats.txt",
@@ -137,3 +137,20 @@ esbuild
       );
     }
   });
+
+async function copyLibs() {
+  const targetDir = path.join(__dirname, "dist", "libs");
+  const tsLibPath = path.join(__dirname, "node_modules", "typescript", "lib");
+  const svleteLibPath = path.join(__dirname, "vendored/langauge-tools/packages/svelte2tsx");
+  await mkdir(targetDir, { recursive: true });
+  for (const f of await readdir(tsLibPath)) {
+    if (f.match(/^lib.*d\.ts/)) {
+      await copyFile(path.join(tsLibPath, f), path.join(targetDir, f));
+    }
+  }
+  for (const f of await readdir(svleteLibPath)) {
+    if (f.match(/^svelte.*d\.ts/)) {
+      await copyFile(path.join(svleteLibPath, f), path.join(targetDir, f));
+    }
+  }
+}

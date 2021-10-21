@@ -26,8 +26,6 @@ console.log("running server svelte");
 
 declare var self: any;
 
-
-
 const messageReader = new BrowserMessageReader(self);
 const messageWriter = new BrowserMessageWriter(self);
 
@@ -168,6 +166,8 @@ import {
 } from "../../vendored/langauge-tools/packages/language-server/src/utils";
 import { FallbackWatcher } from "../../vendored/langauge-tools/packages/language-server/src/lib/FallbackWatcher";
 import { setIsTrusted } from "../../vendored/langauge-tools/packages/language-server/src/importPackage";
+import ts = require("typescript");
+import { FileChangeType, Uri, workspace } from "vscode";
 
 export interface LSOptions {
   /**
@@ -250,6 +250,33 @@ function startServer(options?: LSOptions) {
       evt.initializationOptions?.configuration?.prettier || evt.initializationOptions?.prettierConfig || {}
     );
 
+    const tsconfigContent = evt.initializationOptions.tsconfig;
+    ts.sys.writeFile("/tsconfig.json", tsconfigContent);
+    const options = ts.readConfigFile("/tsconfig.json", ts.sys.readFile).config;
+    for (const [filename, content] of Object.entries(evt.initializationOptions?.libs || {})) {
+      if(filename.includes('svelte')){
+        ts.sys.writeFile("/" + filename, content as string);
+        // ts.sys.writeFile(process.cwd()+"/" + filename, content as string);
+      }else{
+        ts.sys.writeFile("/" + filename, content as string);
+      }
+    }
+    // temp ensure file existance in readDirectory 
+    docManager.on('documentOpen', x=>{
+      ts.sys.writeFile(x.getFilePath()??'/_', ' ')
+    })
+    docManager.on('documentChange', x=>{
+      ts.sys.writeFile(x.getFilePath()??'/_',' ')
+    })
+
+    connection.onDidChangeWatchedFiles(args=>{
+      for(const wfc of args.changes){
+        ts.sys.writeFile(wfc.uri.replace('file://','')??'/_',wfc.type === FileChangeType.Deleted?'': ' ')
+      }
+    })
+    
+
+  
     pluginHost.initialize({
       filterIncompleteCompletions: !evt.initializationOptions?.dontFilterIncompleteCompletions,
       definitionLinkSupport: !!evt.capabilities.textDocument?.definition?.linkSupport,
@@ -265,7 +292,8 @@ function startServer(options?: LSOptions) {
           workspaceUris.map(normalizeUri),
           configManager,
           notifyTsServiceExceedSizeLimit,
-          false, "/tsconfig.json"
+          false,
+          "/tsconfig.json"
         )
       )
     );
@@ -456,7 +484,7 @@ function startServer(options?: LSOptions) {
         fileName: urlToPath(change.uri),
         changeType: change.type,
       }))
-      .filter((change): change is OnWatchFileChangesPara => !!change.fileName);
+      .filter((change): change is OnWatchFileChangesPara => !!change.fileName && !!change.fileName.match(/\.[jt]s$/));
 
     pluginHost.onWatchFileChanges(onWatchFileChangesParas);
 
