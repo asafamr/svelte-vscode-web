@@ -19,6 +19,7 @@ import {
   ColorPresentation,
   TextEdit,
   TextDocumentIdentifier,
+  FileChangeType,
 } from "vscode-languageserver";
 import { TextDocument } from "vscode-languageserver-textdocument";
 
@@ -167,7 +168,6 @@ import {
 import { FallbackWatcher } from "../../vendored/langauge-tools/packages/language-server/src/lib/FallbackWatcher";
 import { setIsTrusted } from "../../vendored/langauge-tools/packages/language-server/src/importPackage";
 import ts = require("typescript");
-import { FileChangeType, Uri, workspace } from "vscode";
 
 export interface LSOptions {
   /**
@@ -250,17 +250,10 @@ function startServer(options?: LSOptions) {
       evt.initializationOptions?.configuration?.prettier || evt.initializationOptions?.prettierConfig || {}
     );
 
-    const tsconfigContent = evt.initializationOptions.tsconfig;
-    ts.sys.writeFile("/tsconfig.json", tsconfigContent);
-    const options = ts.readConfigFile("/tsconfig.json", ts.sys.readFile).config;
-    for (const [filename, content] of Object.entries(evt.initializationOptions?.libs || {})) {
-      if(filename.includes('svelte')){
-        ts.sys.writeFile("/" + filename, content as string);
-        // ts.sys.writeFile(process.cwd()+"/" + filename, content as string);
-      }else{
-        ts.sys.writeFile("/" + filename, content as string);
-      }
+    for (const [filename, content] of Object.entries(evt.initializationOptions?.filesys || {})) {
+      ts.sys.writeFile(filename, content as string);
     }
+   
     // temp ensure file existance in readDirectory 
     docManager.on('documentOpen', x=>{
       ts.sys.writeFile(x.getFilePath()??'/_', ' ')
@@ -275,7 +268,6 @@ function startServer(options?: LSOptions) {
       }
     })
     
-
   
     pluginHost.initialize({
       filterIncompleteCompletions: !evt.initializationOptions?.dontFilterIncompleteCompletions,
@@ -284,19 +276,21 @@ function startServer(options?: LSOptions) {
     pluginHost.register((sveltePlugin = new SveltePlugin(configManager)));
     pluginHost.register(new HTMLPlugin(docManager, configManager));
     pluginHost.register(new CSSPlugin(docManager, configManager));
+    const lsts = new LSAndTSDocResolver(
+      docManager,
+      workspaceUris.map(normalizeUri),
+      configManager,
+      notifyTsServiceExceedSizeLimit,
+      false,
+      "/tsconfig.json"
+    )
     pluginHost.register(
       new TypeScriptPlugin(
         configManager,
-        new LSAndTSDocResolver(
-          docManager,
-          workspaceUris.map(normalizeUri),
-          configManager,
-          notifyTsServiceExceedSizeLimit,
-          false,
-          "/tsconfig.json"
-        )
+        lsts
       )
-    );
+    ); 
+    setTimeout(()=>lsts.updateProjectFiles()) 
 
     const clientSupportApplyEditCommand = !!evt.capabilities.workspace?.applyEdit;
 

@@ -16,6 +16,7 @@ import {
   commands,
   Disposable,
   ExtensionContext,
+  FileType,
   // extensions,
   IndentAction,
   languages,
@@ -291,60 +292,7 @@ const knownLibFilesForCompilerOptions = (target?: string, lib?: string[]) => {
 };
 
 async function getClientOptions(context: ExtensionContext): Promise<LanguageClientOptions> {
-  const tsconfig = await getTsConfigContent();
-  let target = "es5";
-  let lib = [];
-  try {
-    const parsed = JSON.parse(tsconfig);
-    target = parsed?.compilerOptions?.target;
-    lib = parsed?.compilerOptions?.lib;
-  } catch (err) {
-    console.info("Could not get target and libs from tsconfig");
-  }
-
-  const tsLibs = knownLibFilesForCompilerOptions(target, lib);
-  const svelteLibs = ["svelte-jsx.d.ts", "svelte-shims.d.ts", "svelte-native-jsx.d.ts"];
-  const libs = Object.fromEntries(
-    await Promise.all(
-      [...tsLibs, ...svelteLibs].map((x) =>
-        Promise.resolve()
-          .then(() =>
-            workspace.fs
-              .readFile(Uri.joinPath(context.extensionUri, "dist", "libs", x))
-              .then((y) => [x, new TextDecoder().decode(y)])
-          )
-          .catch((err) => {
-            console.info("Could not fetch typescript d.ts file", x, err);
-            return [x, ""];
-          })
-      )
-    )
-  );
-  return {
-    documentSelector: [{ scheme: "file", language: "svelte" }],
-    revealOutputChannelOn: RevealOutputChannelOn.Never,
-    synchronize: {
-      configurationSection: ["svelte", "javascript", "typescript", "prettier"],
-      fileEvents: workspace.createFileSystemWatcher("{**/*.js,**/*.ts,**/*.svelte}", false, false, false),
-    },
-    initializationOptions: JSON.parse(
-      JSON.stringify({
-        configuration: {
-          svelte: workspace.getConfiguration("svelte"),
-          prettier: workspace.getConfiguration("prettier"),
-          emmet: workspace.getConfiguration("emmet"),
-          typescript: workspace.getConfiguration("typescript"),
-          javascript: workspace.getConfiguration("javascript"),
-        },
-        tsconfig,
-        libs,
-        dontFilterIncompleteCompletions: true, // VSCode filters client side and is smarter at it than us
-        isTrusted: (workspace as any).isTrusted,
-      })
-    ),
-  };
-}
-async function getTsConfigContent(): Promise<string> {
+  const filesys = await readDirToDict(workspace.workspaceFolders?.map(x=>x.uri)??[], [".svelte", ".ts", ".js", "tsconfig.json"])
   let tsconfigContent = JSON.stringify({
     compilerOptions: {
       lib: ["DOM", "ES2015"],
@@ -353,20 +301,58 @@ async function getTsConfigContent(): Promise<string> {
       rootDir: "./",
     },
   });
-  try {
-    const wfs = workspace.workspaceFolders;
-    if (wfs && wfs.length > 0) {
-      const diruri = wfs[0].uri;
-      const tsconfigpath = Uri.joinPath(diruri, "tsconfig.json");
-      tsconfigContent = new TextDecoder().decode(await workspace.fs.readFile(tsconfigpath));
-    }
-  } catch (error) {
-    if (error && error["code"] !== "FileNotFound") {
-      console.warn("Error while reading tsconfig", error);
+  if(workspace.workspaceFolders?.length){
+    const tspath= Uri.joinPath(workspace.workspaceFolders[0].uri,'tsconfig.json')
+    if(filesys[tspath.fsPath]){
+      tsconfigContent = filesys[tspath.fsPath];
     }
   }
-  return tsconfigContent;
+  let target = "es5";
+  let lib = [];
+  try {
+    const parsed = JSON.parse(tsconfigContent);
+    target = parsed?.compilerOptions?.target;
+    lib = parsed?.compilerOptions?.lib;
+  } catch (err) {
+    console.info("Could not get target and libs from tsconfig");
+  }
+  filesys['/tsconfig.json'] = tsconfigContent;
+  const tsLibs = knownLibFilesForCompilerOptions(target, lib);
+  const svelteLibs = ["svelte-jsx.d.ts", "svelte-shims.d.ts", "svelte-native-jsx.d.ts"];
+  for(const libfile of [...tsLibs, ...svelteLibs]){
+    try{
+      const content = await workspace.fs
+      .readFile(Uri.joinPath(context.extensionUri, "dist", "libs", libfile))
+      .then((y) => new TextDecoder().decode(y))
+      filesys['/'+libfile] = content;
+    }
+    catch(error){
+      console.info(error)
+    }
+  }
+  return {
+    documentSelector: [{ scheme: "file", language: "svelte" }],
+    revealOutputChannelOn: RevealOutputChannelOn.Never,
+    synchronize: {
+      configurationSection: ["svelte", "javascript", "typescript", "prettier"],
+      fileEvents: workspace.createFileSystemWatcher("{**/*.js,**/*.ts,**/*.svelte}", false, false, false),
+    },
+    initializationOptions: 
+      {
+        configuration: JSON.parse(JSON.stringify({
+          svelte: workspace.getConfiguration("svelte"),
+          prettier: workspace.getConfiguration("prettier"),
+          emmet: workspace.getConfiguration("emmet"),
+          typescript: workspace.getConfiguration("typescript"),
+          javascript: workspace.getConfiguration("javascript"),
+        })),
+        filesys,
+        dontFilterIncompleteCompletions: true, // VSCode filters client side and is smarter at it than us
+        isTrusted: (workspace as any).isTrusted,
+      }
+  };
 }
+
 function createWorkerLanguageClient(context: ExtensionContext, clientOptions: LanguageClientOptions) {
   // Create a worker. The worker main file implements the language server.
   const serverMain = Uri.joinPath(context.extensionUri, "dist/web/server.js");
@@ -498,4 +484,43 @@ function addExtracComponentCommand(getLS: () => LanguageClient, context: Extensi
   );
 }
 
-// TODO: support all extension.js listerners etc...
+async function readDirToDict(paths: Uri[], extensions: string[]) {
+  const thatsTooMuchMan = {};
+  const res: Record<string, string> = {};
+  let nFiles = 0;
+  let size = 0;
+
+  async function walk(dir: Uri, onFound: (path: Uri) => Promise<void>) {
+    try {
+      const nodes = (await workspace.fs.readDirectory(dir)).sort();
+      const files = nodes.flatMap((x) => (x[1] === FileType.File ? [Uri.joinPath(dir, x[0])] : []));
+      const dirs = nodes.flatMap((x) => (x[1] === FileType.Directory ? [Uri.joinPath(dir, x[0])] : []));
+      for (const f of files) {
+        if (extensions.find((x) => f.fsPath.endsWith(x))) {
+          await onFound(f);
+        }
+      }
+      for (const d of dirs) {
+        if (d.fsPath.includes("node_modules")) continue;
+        await walk(d, onFound);
+      }
+    } catch (error) {
+      if (error === thatsTooMuchMan) throw error;
+      console.warn("error while getting initial fs", error);
+    }
+  }
+  for(const pathUri of paths){
+    await walk(pathUri, async (foundPath) => {
+      if (nFiles > 200 || size > 1e6) {
+        throw thatsTooMuchMan;
+      }
+      const content = await workspace.fs.readFile(foundPath).then((x) => new TextDecoder().decode(x));
+      res[foundPath.fsPath] = content;
+      size += content.length;
+      nFiles += 1;
+    }).catch(e=>{
+      if(e === thatsTooMuchMan)return res;
+    });
+  }
+  return res;
+}
