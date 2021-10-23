@@ -2,6 +2,8 @@
 .vscode-test-web/**
 src/**
 out/**
+vendored/**
+tmp*
 node_modules/**
 .gitignore
 vsc-extension-quickstart.md
@@ -10,4 +12,4 @@ webpack.config.js
 **/tsconfig.json
 **/.eslintrc.json
 **/*.map
-**/*.ts
+# **/*.ts

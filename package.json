@@ -5,11 +5,12 @@
 	"engines": {
 		"vscode": "^1.60.0"
 	},
+	"repository":"https://github.com/asafamr/svelte-vscode-web",
 	"browser": "./dist/web/extension.js",
 	"homepage": "https://github.com/sveltejs/language-tools#readme",
 	"displayName": "Svelte for VS Code",
 	"publisher": "svelte",
-	"icon": "vendored/langauge-tools/packages/svelte-vscode/icons/logo.png",
+	"icon": "static/logo.png",
 	"galleryBanner": {
 		"color": "#FF3E00",
 		"theme": "dark"
@@ -515,19 +516,18 @@
 	},
 	"scripts": {
 		"dev-watch": "node -r esbuild-register build.ts --dev",
-		"compile": "rm -rf ./dist/web && node -r esbuild-register build.ts",
+		"compile": "npm run bootstrap && rm -rf ./dist && node -r esbuild-register build.ts",
 		"bootstrap": "cd vendored/langauge-tools/packages/svelte-vscode && npm run build:grammar",
 		"run-in-browser": "vscode-test-web --browserType=chromium --extensionDevelopmentPath=. .",
+		"vscode:prepublish": "npm run compile",
 		"test": "echo oldstuff || vscode-test-web --browserType=chromium --extensionDevelopmentPath=. --extensionTestsPath=dist/web/test/suite/index.js",
 		"pretest": "echo oldstuff || npm run compile-web",
-		"vscode:prepublish": "echo oldstuff || npm run package-web",
-		"compile-web": "echo oldstuff || webpack",
-		"package-web": "echo oldstuff || webpack --mode production --devtool hidden-source-map",
 		"lint": "echo oldstuff || eslint src --ext ts"
 	},
 	"devDependencies": {
 		"@babel/core": "^7.15.8",
 		"@tsconfig/node12": "^1.0.9",
+		"@types/fs-extra": "^9.0.13",
 		"@types/lz-string": "^1.3.34",
 		"@types/mocha": "^9.0.0",
 		"@types/prettier": "^2.4.1",
@@ -545,6 +545,7 @@
 		"eslint": "^7.32.0",
 		"estree-walker": "^2.0.1",
 		"fast-glob": "^3.2.7",
+		"fs-extra": "^10.0.0",
 		"lodash": "^4.17.21",
 		"lodash-es": "^4.17.21",
 		"lz-string": "^1.4.4",
