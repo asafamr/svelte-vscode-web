@@ -4,6 +4,7 @@ import { readdirSync, readFileSync } from "fs";
 import path from "path";
 import { writeFile, readFile, mkdir, readdir, copyFile } from "fs/promises";
 
+import {copy} from "fs-extra"
 const dev = process.argv.includes("--dev");
 
 const sourcesContent = dev;
@@ -141,6 +142,7 @@ esbuild
 async function copyLibs() {
   const targetDir = path.join(__dirname, "dist", "libs");
   const tsLibPath = path.join(__dirname, "node_modules", "typescript", "lib");
+  const svelteTypesPath = path.join(__dirname, "node_modules", "svelte", "types");
   const svleteLibPath = path.join(__dirname, "vendored/langauge-tools/packages/svelte2tsx");
   await mkdir(targetDir, { recursive: true });
   for (const f of await readdir(tsLibPath)) {
@@ -153,4 +155,5 @@ async function copyLibs() {
       await copyFile(path.join(svleteLibPath, f), path.join(targetDir, f));
     }
   }
+  await copy(svelteTypesPath, path.join(targetDir, 'svelte'),{recursive:true,overwrite:true});
 }

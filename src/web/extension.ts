@@ -306,6 +306,7 @@ async function getClientOptions(context: ExtensionContext): Promise<LanguageClie
     if(filesys[tspath.fsPath]){
       tsconfigContent = filesys[tspath.fsPath];
     }
+    
   }
   let target = "es5";
   let lib = [];
@@ -317,17 +318,13 @@ async function getClientOptions(context: ExtensionContext): Promise<LanguageClie
     console.info("Could not get target and libs from tsconfig");
   }
   filesys['/tsconfig.json'] = tsconfigContent;
-  const tsLibs = knownLibFilesForCompilerOptions(target, lib);
-  const svelteLibs = ["svelte-jsx.d.ts", "svelte-shims.d.ts", "svelte-native-jsx.d.ts"];
-  for(const libfile of [...tsLibs, ...svelteLibs]){
-    try{
-      const content = await workspace.fs
-      .readFile(Uri.joinPath(context.extensionUri, "dist", "libs", libfile))
-      .then((y) => new TextDecoder().decode(y))
-      filesys['/'+libfile] = content;
-    }
-    catch(error){
-      console.info(error)
+  filesys['/node_modules/svelte/index.d.ts'] = 'export * from "/node_modules/svelte/types/runtime/index.d.ts"'
+  for(const [k,v] of Object.entries(await readDirToDict([Uri.joinPath(context.extensionUri, "dist", "libs")],['.d.ts']))){
+    const toRep = Uri.joinPath(context.extensionUri, "dist", "libs").fsPath;
+    if(k.includes('svelte/')){
+      filesys[k.replace(toRep+'/svelte','/node_modules/svelte/types')] = v;
+    }else{
+      filesys[k.replace(toRep,'')] = v;
     }
   }
   return {
@@ -511,7 +508,7 @@ async function readDirToDict(paths: Uri[], extensions: string[]) {
   }
   for(const pathUri of paths){
     await walk(pathUri, async (foundPath) => {
-      if (nFiles > 200 || size > 1e6) {
+      if (nFiles > 1000 || size > 10e6) { 
         throw thatsTooMuchMan;
       }
       const content = await workspace.fs.readFile(foundPath).then((x) => new TextDecoder().decode(x));
