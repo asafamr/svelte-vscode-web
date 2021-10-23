@@ -140,20 +140,25 @@ esbuild
   });
 
 async function copyLibs() {
-  const targetDir = path.join(__dirname, "dist", "libs");
+  const libsDir = path.join(__dirname, "dist", "libs");
   const tsLibPath = path.join(__dirname, "node_modules", "typescript", "lib");
   const svelteTypesPath = path.join(__dirname, "node_modules", "svelte", "types");
   const svleteLibPath = path.join(__dirname, "vendored/langauge-tools/packages/svelte2tsx");
-  await mkdir(targetDir, { recursive: true });
+
+  await mkdir(libsDir, { recursive: true });
   for (const f of await readdir(tsLibPath)) {
     if (f.match(/^lib.*d\.ts/)) {
-      await copyFile(path.join(tsLibPath, f), path.join(targetDir, f));
+      await copyFile(path.join(tsLibPath, f), path.join(libsDir, f));
     }
   }
   for (const f of await readdir(svleteLibPath)) {
     if (f.match(/^svelte.*d\.ts/)) {
-      await copyFile(path.join(svleteLibPath, f), path.join(targetDir, f));
+      await copyFile(path.join(svleteLibPath, f), path.join(libsDir, f));
     }
   }
-  await copy(svelteTypesPath, path.join(targetDir, 'svelte'),{recursive:true,overwrite:true});
+  await copy(svelteTypesPath, path.join(libsDir, 'svelte'),{recursive:true,overwrite:true});
+  await copyFile(path.join(__dirname, "vendored/langauge-tools/packages/svelte-vscode/syntaxes/svelte.tmLanguage.json"), 
+    path.join(__dirname, "dist/svelte.tmLanguage.json"));
+  await copyFile(path.join(__dirname, "vendored/langauge-tools/packages/svelte-vscode/language-configuration.json"), 
+    path.join(__dirname, "dist/language-configuration.json"));
 }

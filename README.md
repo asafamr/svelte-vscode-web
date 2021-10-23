@@ -1,8 +1,13 @@
 # Svelte VSCode Web Extension
 
-This is an unoffical port of the svelte vscode extension to vscode web extension format.
-Web extensions can run in vscode web mode (github.dev, github1s.com...) [but have some limitations](https://code.visualstudio.com/api/extension-guides/web-extensions).
+This is an unoffical port of svelte vscode extension to vscode web.
+Web extensions can run in both standalonde vscode and browser-based web vscode (used in e.g. github.dev, github1s.com...).
+[Web extensions have some limitations](https://code.visualstudio.com/api/extension-guides/web-extensions).
 
+
+
+
+[REPO](https://github.com/asafamr/svelte-vscode-web) readme:
 
 I've started from the web extension starter template but switched to esbuild.
 

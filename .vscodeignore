@@ -3,7 +3,11 @@
 src/**
 out/**
 vendored/**
+module_shims/**
+test/**
 tmp*
+*.vsix
+build.ts
 node_modules/**
 .gitignore
 vsc-extension-quickstart.md
