@@ -199,136 +199,39 @@ export async function activate(context: ExtensionContext) {
   });
 }
 
-// from https://github.com/microsoft/TypeScript-Website/blob/v2/packages/typescript-vfs/src/index.ts
-const knownLibFilesForCompilerOptions = (target?: string, lib?: string[]) => {
-  target = target ? target.toLowerCase() : "es5";
-  lib = lib ? lib.map((x) => x.toLowerCase()) : [];
-  // const target = compilerOptions.target || ts.ScriptTarget.ES5
-  // const lib = compilerOptions.lib || []
-
-  const files = [
-    "lib.d.ts",
-    "lib.dom.d.ts",
-    "lib.dom.iterable.d.ts",
-    "lib.webworker.d.ts",
-    "lib.webworker.importscripts.d.ts",
-    "lib.scripthost.d.ts",
-    "lib.es5.d.ts",
-    "lib.es6.d.ts",
-    "lib.es2015.collection.d.ts",
-    "lib.es2015.core.d.ts",
-    "lib.es2015.d.ts",
-    "lib.es2015.generator.d.ts",
-    "lib.es2015.iterable.d.ts",
-    "lib.es2015.promise.d.ts",
-    "lib.es2015.proxy.d.ts",
-    "lib.es2015.reflect.d.ts",
-    "lib.es2015.symbol.d.ts",
-    "lib.es2015.symbol.wellknown.d.ts",
-    "lib.es2016.array.include.d.ts",
-    "lib.es2016.d.ts",
-    "lib.es2016.full.d.ts",
-    "lib.es2017.d.ts",
-    "lib.es2017.full.d.ts",
-    "lib.es2017.intl.d.ts",
-    "lib.es2017.object.d.ts",
-    "lib.es2017.sharedmemory.d.ts",
-    "lib.es2017.string.d.ts",
-    "lib.es2017.typedarrays.d.ts",
-    "lib.es2018.asyncgenerator.d.ts",
-    "lib.es2018.asynciterable.d.ts",
-    "lib.es2018.d.ts",
-    "lib.es2018.full.d.ts",
-    "lib.es2018.intl.d.ts",
-    "lib.es2018.promise.d.ts",
-    "lib.es2018.regexp.d.ts",
-    "lib.es2019.array.d.ts",
-    "lib.es2019.d.ts",
-    "lib.es2019.full.d.ts",
-    "lib.es2019.object.d.ts",
-    "lib.es2019.string.d.ts",
-    "lib.es2019.symbol.d.ts",
-    "lib.es2020.d.ts",
-    "lib.es2020.full.d.ts",
-    "lib.es2020.string.d.ts",
-    "lib.es2020.symbol.wellknown.d.ts",
-    "lib.es2020.bigint.d.ts",
-    "lib.es2020.promise.d.ts",
-    "lib.es2020.sharedmemory.d.ts",
-    "lib.es2020.intl.d.ts",
-    "lib.es2021.d.ts",
-    "lib.es2021.full.d.ts",
-    "lib.es2021.promise.d.ts",
-    "lib.es2021.string.d.ts",
-    "lib.es2021.weakref.d.ts",
-    "lib.esnext.d.ts",
-    "lib.esnext.full.d.ts",
-    "lib.esnext.intl.d.ts",
-    "lib.esnext.promise.d.ts",
-    "lib.esnext.string.d.ts",
-    "lib.esnext.weakref.d.ts",
-  ];
-
-  // const targetToCut = ts.ScriptTarget[target]
-  const matches = files.filter((f) => f.startsWith(`lib.${target}`));
-  const targetCutIndex = files.indexOf(matches.pop()!);
-
-  const getMax = (array: number[]) =>
-    array && array.length ? array.reduce((max, current) => (current > max ? current : max)) : undefined;
-
-  // Find the index for everything in
-  const indexesForCutting = lib.map((lib) => {
-    const matches = files.filter((f) => f.startsWith(`lib.${lib.toLowerCase()}`));
-    if (matches.length === 0) return 0;
-
-    const cutIndex = files.indexOf(matches.pop()!);
-    return cutIndex;
-  });
-
-  const libCutIndex = getMax(indexesForCutting) || 0;
-
-  const finalCutIndex = Math.max(targetCutIndex, libCutIndex);
-  return files.slice(0, finalCutIndex + 1);
-};
-
 async function getClientOptions(context: ExtensionContext): Promise<LanguageClientOptions> {
-  const filesys = await readDirToDict(workspace.workspaceFolders?.map(x=>x.uri)??[], [".svelte", ".ts", ".js", "tsconfig.json"])
+  const filesys = await readDirToDict(workspace.workspaceFolders?.map(x=>x.uri)??[], [".svelte", ".ts", "tsconfig.json"])
   let tsconfigContent = JSON.stringify({
     compilerOptions: {
       lib: ["DOM", "ES2015"],
       module: "ES6",
       target: "ES6",
-      rootDir: "./",
+      rootDir: "/",
     },
   });
   if(workspace.workspaceFolders?.length){
     const tspath= Uri.joinPath(workspace.workspaceFolders[0].uri,'tsconfig.json')
-    if(filesys[tspath.fsPath]){
-      tsconfigContent = filesys[tspath.fsPath];
+    if(filesys[tspath.path]){
+      tsconfigContent = filesys[tspath.path];
     }
-    
-  }
-  let target = "es5";
-  let lib = [];
-  try {
-    const parsed = JSON.parse(tsconfigContent);
-    target = parsed?.compilerOptions?.target;
-    lib = parsed?.compilerOptions?.lib;
-  } catch (err) {
-    console.info("Could not get target and libs from tsconfig");
   }
   filesys['/tsconfig.json'] = tsconfigContent;
   filesys['/node_modules/svelte/index.d.ts'] = 'export * from "/node_modules/svelte/types/runtime/index.d.ts"'
-  for(const [k,v] of Object.entries(await readDirToDict([Uri.joinPath(context.extensionUri, "dist", "libs")],['.d.ts']))){
-    const toRep = Uri.joinPath(context.extensionUri, "dist", "libs").fsPath;
-    if(k.includes('svelte/')){
-      filesys[k.replace(toRep+'/svelte','/node_modules/svelte/types')] = v;
-    }else{
-      filesys[k.replace(toRep,'')] = v;
-    }
+  const allLibs = await fetch(Uri.joinPath(context.extensionUri, "dist/allLibs.json").toString()).then(x=>x.json())
+  for(const [lib, content] of Object.entries(allLibs.svelte)){
+    filesys['/node_modules/svelte/'+lib] = content as string
   }
+  for(const [lib, content] of Object.entries(allLibs.svelte2tsx)){
+    filesys['/'+lib] = content as string
+  }
+  for(const [lib, content] of Object.entries(allLibs.tslibs)){
+    filesys['/'+lib] = content as string
+  }
+  
+  
   return {
-    documentSelector: [{ scheme: "file", language: "svelte" }],
+    // ignore schema like in https://github.com/microsoft/vscode/blob/main/extensions/json-language-features/client/src/jsonClient.ts
+    documentSelector: ["svelte"],
     revealOutputChannelOn: RevealOutputChannelOn.Never,
     synchronize: {
       configurationSection: ["svelte", "javascript", "typescript", "prettier"],
@@ -493,12 +396,12 @@ async function readDirToDict(paths: Uri[], extensions: string[]) {
       const files = nodes.flatMap((x) => (x[1] === FileType.File ? [Uri.joinPath(dir, x[0])] : []));
       const dirs = nodes.flatMap((x) => (x[1] === FileType.Directory ? [Uri.joinPath(dir, x[0])] : []));
       for (const f of files) {
-        if (extensions.find((x) => f.fsPath.endsWith(x))) {
+        if (extensions.find((x) => f.path.endsWith(x))) {
           await onFound(f);
         }
       }
       for (const d of dirs) {
-        if (d.fsPath.includes("node_modules")) continue;
+        if (d.path.includes("node_modules")) continue;
         await walk(d, onFound);
       }
     } catch (error) {
@@ -512,7 +415,7 @@ async function readDirToDict(paths: Uri[], extensions: string[]) {
         throw thatsTooMuchMan;
       }
       const content = await workspace.fs.readFile(foundPath).then((x) => new TextDecoder().decode(x));
-      res[foundPath.fsPath] = content;
+      res[foundPath.path] = content;
       size += content.length;
       nFiles += 1;
     }).catch(e=>{

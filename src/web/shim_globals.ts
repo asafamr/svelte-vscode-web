@@ -15,7 +15,7 @@ import { configLoader } from "../../vendored/langauge-tools/packages/language-se
 // function binder()
 import ppts from "svelte-preprocess/dist/processors/typescript";
 
-const conf = { preprocess: [ppts({ tsconfigFile: "/tsconfig.json" })] };
+const conf = { preprocess: [ppts({ tsconfigFile: "/tsconfig.json", tsconfigDirectory:"/" })] };
 
 configLoader.getConfig = (x) => conf;
 configLoader.awaitConfig = () => Promise.resolve(conf);

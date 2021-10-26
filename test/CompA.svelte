@@ -7,7 +7,7 @@ this is comp {myname}
 
 it inlcudes
 <div class="some-div">
-    <CompB paramNum=200></CompB>
+                <CompB paramNum=200></CompB>
     
     an import: {moduleExport}
 </div>

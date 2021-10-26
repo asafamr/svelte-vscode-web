@@ -8,9 +8,11 @@ export function clamp(num: number, min: number, max: number): number {
 
 export function urlToPath(stringUrl: string): string | null {
     const url = URI.parse(stringUrl);
-    if (url.scheme !== 'file') {
-        return null;
-    }
+
+    // WEBEXT
+    // if (url.scheme !== 'file') {
+    //     return null;
+    // }
     return url.fsPath.replace(/\\/g, '/');
 }
 

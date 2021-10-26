@@ -3,8 +3,8 @@ import * as esbuild from "esbuild";
 import { readdirSync, readFileSync } from "fs";
 import path from "path";
 import { writeFile, readFile, mkdir, readdir, copyFile } from "fs/promises";
-
-import {copy} from "fs-extra"
+import glob from "fast-glob";
+import { copy } from "fs-extra";
 const dev = process.argv.includes("--dev");
 
 const sourcesContent = dev;
@@ -142,23 +142,26 @@ esbuild
 async function copyLibs() {
   const libsDir = path.join(__dirname, "dist", "libs");
   const tsLibPath = path.join(__dirname, "node_modules", "typescript", "lib");
-  const svelteTypesPath = path.join(__dirname, "node_modules", "svelte", "types");
-  const svleteLibPath = path.join(__dirname, "vendored/langauge-tools/packages/svelte2tsx");
+  // const svelteTypesPath = path.join(__dirname, "node_modules", "svelte", "types");
 
-  await mkdir(libsDir, { recursive: true });
-  for (const f of await readdir(tsLibPath)) {
-    if (f.match(/^lib.*d\.ts/)) {
-      await copyFile(path.join(tsLibPath, f), path.join(libsDir, f));
-    }
+  const allLibs = {svelte:{}, svelte2tsx:{}, tslibs:{}}
+  for(const filename of await glob('**/*.d.ts', {cwd:path.join(__dirname, "node_modules/svelte")})){
+    allLibs.svelte[filename] =  (await readFile(path.join(__dirname, "node_modules/svelte",filename))).toString()
   }
-  for (const f of await readdir(svleteLibPath)) {
-    if (f.match(/^svelte.*d\.ts/)) {
-      await copyFile(path.join(svleteLibPath, f), path.join(libsDir, f));
-    }
+  for(const filename of await glob('svelte*.d.ts', {cwd:path.join(__dirname, "vendored/langauge-tools/packages/svelte2tsx")})){
+    allLibs.svelte2tsx[filename] =  (await readFile(path.join(__dirname, "vendored/langauge-tools/packages/svelte2tsx",filename))).toString()
   }
-  await copy(svelteTypesPath, path.join(libsDir, 'svelte'),{recursive:true,overwrite:true});
-  await copyFile(path.join(__dirname, "vendored/langauge-tools/packages/svelte-vscode/syntaxes/svelte.tmLanguage.json"), 
-    path.join(__dirname, "dist/svelte.tmLanguage.json"));
-  await copyFile(path.join(__dirname, "vendored/langauge-tools/packages/svelte-vscode/language-configuration.json"), 
-    path.join(__dirname, "dist/language-configuration.json"));
+  for(const filename of await glob('lib*.d.ts', {cwd:path.join(__dirname, "node_modules", "typescript", "lib")})){
+    allLibs.tslibs[filename] =  (await readFile(path.join(__dirname, "node_modules", "typescript", "lib", filename))).toString()
+  }
+
+  await writeFile( path.join(__dirname, "dist/allLibs.json"),JSON.stringify(allLibs));
+  await copyFile(
+    path.join(__dirname, "vendored/langauge-tools/packages/svelte-vscode/syntaxes/svelte.tmLanguage.json"),
+    path.join(__dirname, "dist/svelte.tmLanguage.json")
+  );
+  await copyFile(
+    path.join(__dirname, "vendored/langauge-tools/packages/svelte-vscode/language-configuration.json"),
+    path.join(__dirname, "dist/language-configuration.json")
+  );
 }

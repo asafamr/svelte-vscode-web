@@ -6,21 +6,53 @@
  *--------------------------------------------------------------------------------------------*/
 import "./shim_globals";
 import { configLoader } from "../../vendored/langauge-tools/packages/language-server/src/lib/documents/configLoader";
-import { createConnection, BrowserMessageReader, BrowserMessageWriter } from "vscode-languageserver/browser";
+import { createConnection, BrowserMessageReader, BrowserMessageWriter,ServerCapabilities ,
 
-import {
+  ApplyWorkspaceEditParams,
+  ApplyWorkspaceEditRequest,
+  CodeActionKind,
+  DocumentUri,
+  Connection,
+  MessageType,
+  RenameFile,
+  RequestType,
+  ShowMessageNotification,
+  // TextDocumentIdentifier,
+  TextDocumentPositionParams,
+  TextDocumentSyncKind,
+  WorkspaceEdit,
+  SemanticTokensRequest,
+  SemanticTokensRangeRequest,
+  DidChangeWatchedFilesParams,
+  LinkedEditingRangeRequest,
   Color,
   ColorInformation,
   Range,
   InitializeParams,
   InitializeResult,
-  ServerCapabilities,
+  // ServerCapabilities,
   TextDocuments,
   ColorPresentation,
   TextEdit,
   TextDocumentIdentifier,
   FileChangeType,
-} from "vscode-languageserver";
+
+
+} from "vscode-languageserver/browser";
+
+// import {
+//   Color,
+//   ColorInformation,
+//   Range,
+//   InitializeParams,
+//   InitializeResult,
+//   // ServerCapabilities,
+//   TextDocuments,
+//   ColorPresentation,
+//   TextEdit,
+//   TextDocumentIdentifier,
+//   FileChangeType,
+// } from "vscode-languageserver";
 import { TextDocument } from "vscode-languageserver-textdocument";
 
 console.log("running server svelte");
@@ -124,25 +156,25 @@ startServer({ connection });
 // 	return Color.create(r, g, b, 1);
 // }
 
-import {
-  ApplyWorkspaceEditParams,
-  ApplyWorkspaceEditRequest,
-  CodeActionKind,
-  DocumentUri,
-  Connection,
-  MessageType,
-  RenameFile,
-  RequestType,
-  ShowMessageNotification,
-  // TextDocumentIdentifier,
-  TextDocumentPositionParams,
-  TextDocumentSyncKind,
-  WorkspaceEdit,
-  SemanticTokensRequest,
-  SemanticTokensRangeRequest,
-  DidChangeWatchedFilesParams,
-  LinkedEditingRangeRequest,
-} from "vscode-languageserver";
+// import {
+//   ApplyWorkspaceEditParams,
+//   ApplyWorkspaceEditRequest,
+//   CodeActionKind,
+//   DocumentUri,
+//   Connection,
+//   MessageType,
+//   RenameFile,
+//   RequestType,
+//   ShowMessageNotification,
+//   // TextDocumentIdentifier,
+//   TextDocumentPositionParams,
+//   TextDocumentSyncKind,
+//   WorkspaceEdit,
+//   SemanticTokensRequest,
+//   SemanticTokensRangeRequest,
+//   DidChangeWatchedFilesParams,
+//   LinkedEditingRangeRequest,
+// } from "vscode-languageserver";
 // import { IPCMessageReader, IPCMessageWriter, createConnection } from 'vscode-languageserver/node';
 import { DiagnosticsManager } from "../../vendored/langauge-tools/packages/language-server/src/lib/DiagnosticsManager";
 import { Document, DocumentManager } from "../../vendored/langauge-tools/packages/language-server/src/lib/documents";
@@ -165,9 +197,12 @@ import {
   normalizeUri,
   urlToPath,
 } from "../../vendored/langauge-tools/packages/language-server/src/utils";
+
 import { FallbackWatcher } from "../../vendored/langauge-tools/packages/language-server/src/lib/FallbackWatcher";
 import { setIsTrusted } from "../../vendored/langauge-tools/packages/language-server/src/importPackage";
 import ts = require("typescript");
+
+
 
 export interface LSOptions {
   /**
@@ -181,6 +216,7 @@ export interface LSOptions {
    */
   logErrorsOnly?: boolean;
 }
+
 
 /**
  * Starts the language server.
@@ -219,7 +255,7 @@ function startServer(options?: LSOptions) {
     if (workspaceUris.length === 0) {
       Logger.error("No workspace path set");
     } else {
-      process.chdir(new URL(workspaceUris[0]).pathname);
+      process.chdir(urlToPath(workspaceUris[0]) ?? "/");
     }
 
     if (!evt.capabilities.workspace?.didChangeWatchedFiles) {
@@ -253,22 +289,21 @@ function startServer(options?: LSOptions) {
     for (const [filename, content] of Object.entries(evt.initializationOptions?.filesys || {})) {
       ts.sys.writeFile(filename, content as string);
     }
-   
-    // temp ensure file existance in readDirectory 
-    docManager.on('documentOpen', x=>{
-      ts.sys.writeFile(x.getFilePath()??'/_', ' ')
-    })
-    docManager.on('documentChange', x=>{
-      ts.sys.writeFile(x.getFilePath()??'/_',' ')
-    })
 
-    connection.onDidChangeWatchedFiles(args=>{
-      for(const wfc of args.changes){
-        ts.sys.writeFile(wfc.uri.replace('file://','')??'/_',wfc.type === FileChangeType.Deleted?'': ' ')
-      }
-    })
-    
-  
+    // temp ensure file existance in readDirectory
+    // docManager.on('documentOpen', x=>{
+    //   ts.sys.writeFile(x.getFilePath()??'/_', ' ')
+    // })
+    // docManager.on('documentChange', x=>{
+    //   ts.sys.writeFile(x.getFilePath()??'/_',' ')
+    // })
+
+    // connection.onDidChangeWatchedFiles(args=>{
+    //   for(const wfc of args.changes){
+    //     ts.sys.writeFile(wfc.uri.replace('file://','')??'/_',wfc.type === FileChangeType.Deleted?'': ' ')
+    //   }
+    // })
+
     pluginHost.initialize({
       filterIncompleteCompletions: !evt.initializationOptions?.dontFilterIncompleteCompletions,
       definitionLinkSupport: !!evt.capabilities.textDocument?.definition?.linkSupport,
@@ -283,101 +318,97 @@ function startServer(options?: LSOptions) {
       notifyTsServiceExceedSizeLimit,
       false,
       "/tsconfig.json"
-    )
-    pluginHost.register(
-      new TypeScriptPlugin(
-        configManager,
-        lsts
-      )
-    ); 
-    setTimeout(()=>lsts.updateProjectFiles()) 
+    );
+    pluginHost.register(new TypeScriptPlugin(configManager, lsts));
+    // setTimeout(()=>lsts.updateProjectFiles())
 
     const clientSupportApplyEditCommand = !!evt.capabilities.workspace?.applyEdit;
 
-    return {
-      capabilities: {
-        textDocumentSync: {
-          openClose: true,
-          change: TextDocumentSyncKind.Incremental,
-          save: {
-            includeText: false,
-          },
+    const capabilities:ServerCapabilities = {
+      textDocumentSync: {
+        openClose: true,
+        change: TextDocumentSyncKind.Incremental,
+        save: {
+          includeText: false,
         },
-        hoverProvider: true,
-        completionProvider: {
-          resolveProvider: true,
-          triggerCharacters: [
-            ".",
-            '"',
-            "'",
-            "`",
-            "/",
-            "@",
-            "<",
-
-            // Emmet
-            ">",
-            "*",
-            "#",
-            "$",
-            "+",
-            "^",
-            "(",
-            "[",
-            "@",
-            "-",
-            // No whitespace because
-            // it makes for weird/too many completions
-            // of other completion providers
-
-            // Svelte
-            ":",
-            "|",
-          ],
-        },
-        documentFormattingProvider: true,
-        colorProvider: true,
-        documentSymbolProvider: true,
-        definitionProvider: true,
-        codeActionProvider: evt.capabilities.textDocument?.codeAction?.codeActionLiteralSupport
-          ? {
-              codeActionKinds: [
-                CodeActionKind.QuickFix,
-                CodeActionKind.SourceOrganizeImports,
-                ...(clientSupportApplyEditCommand ? [CodeActionKind.Refactor] : []),
-              ],
-            }
-          : true,
-        executeCommandProvider: clientSupportApplyEditCommand
-          ? {
-              commands: [
-                "function_scope_0",
-                "function_scope_1",
-                "function_scope_2",
-                "function_scope_3",
-                "constant_scope_0",
-                "constant_scope_1",
-                "constant_scope_2",
-                "constant_scope_3",
-                "extract_to_svelte_component",
-                "Infer function return type",
-              ],
-            }
-          : undefined,
-        renameProvider: evt.capabilities.textDocument?.rename?.prepareSupport ? { prepareProvider: true } : true,
-        referencesProvider: true,
-        selectionRangeProvider: true,
-        signatureHelpProvider: {
-          triggerCharacters: ["(", ",", "<"],
-          retriggerCharacters: [")"],
-        },
-        semanticTokensProvider: {
-          legend: getSemanticTokenLegends(),
-          range: true,
-          full: true,
-        },
-        linkedEditingRangeProvider: true,
       },
+      hoverProvider: true,
+      completionProvider: {
+        resolveProvider: true,
+        triggerCharacters: [
+          ".",
+          '"',
+          "'",
+          "`",
+          "/",
+          "@",
+          "<",
+
+          // Emmet
+          ">",
+          "*",
+          "#",
+          "$",
+          "+",
+          "^",
+          "(",
+          "[",
+          "@",
+          "-",
+          // No whitespace because
+          // it makes for weird/too many completions
+          // of other completion providers
+
+          // Svelte
+          ":",
+          "|",
+        ],
+      },
+      documentFormattingProvider: true,
+      colorProvider: true,
+      documentSymbolProvider: true,
+      definitionProvider: true,
+      codeActionProvider: evt.capabilities.textDocument?.codeAction?.codeActionLiteralSupport
+        ? {
+            codeActionKinds: [
+              CodeActionKind.QuickFix,
+              CodeActionKind.SourceOrganizeImports,
+              ...(clientSupportApplyEditCommand ? [CodeActionKind.Refactor] : []),
+            ],
+          }
+        : true,
+      executeCommandProvider: clientSupportApplyEditCommand
+        ? {
+            commands: [
+              "function_scope_0",
+              "function_scope_1",
+              "function_scope_2",
+              "function_scope_3",
+              "constant_scope_0",
+              "constant_scope_1",
+              "constant_scope_2",
+              "constant_scope_3",
+              "extract_to_svelte_component",
+              "Infer function return type",
+            ],
+          }
+        : undefined,
+      renameProvider: evt.capabilities.textDocument?.rename?.prepareSupport ? { prepareProvider: true } : true,
+      referencesProvider: true,
+      selectionRangeProvider: true,
+      signatureHelpProvider: {
+        triggerCharacters: ["(", ",", "<"],
+        retriggerCharacters: [")"],
+      },
+      semanticTokensProvider: {
+        legend: getSemanticTokenLegends(),
+        range: true,
+        full: true,
+      },
+      linkedEditingRangeProvider: true,
+    }
+    return {
+      capabilities
     };
   });
 
@@ -419,7 +450,10 @@ function startServer(options?: LSOptions) {
   connection.onCompletion((evt, cancellationToken) =>
     pluginHost.getCompletions(evt.textDocument, evt.position, evt.context, cancellationToken)
   );
-  connection.onDocumentFormatting((evt) => pluginHost.formatDocument(evt.textDocument, evt.options));
+  connection.onDocumentFormatting((evt) => 
+  {
+    console.log('format')
+  return pluginHost.formatDocument(evt.textDocument, evt.options)});
   connection.onRequest(new RequestType("html/tag"), (evt: any) =>
     pluginHost.doTagComplete(evt.textDocument, evt.position)
   );
