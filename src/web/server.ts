@@ -289,21 +289,7 @@ function startServer(options?: LSOptions) {
     for (const [filename, content] of Object.entries(evt.initializationOptions?.filesys || {})) {
       ts.sys.writeFile(filename, content as string);
     }
-
-    // temp ensure file existance in readDirectory
-    // docManager.on('documentOpen', x=>{
-    //   ts.sys.writeFile(x.getFilePath()??'/_', ' ')
-    // })
-    // docManager.on('documentChange', x=>{
-    //   ts.sys.writeFile(x.getFilePath()??'/_',' ')
-    // })
-
-    // connection.onDidChangeWatchedFiles(args=>{
-    //   for(const wfc of args.changes){
-    //     ts.sys.writeFile(wfc.uri.replace('file://','')??'/_',wfc.type === FileChangeType.Deleted?'': ' ')
-    //   }
-    // })
-
+    
     pluginHost.initialize({
       filterIncompleteCompletions: !evt.initializationOptions?.dontFilterIncompleteCompletions,
       definitionLinkSupport: !!evt.capabilities.textDocument?.definition?.linkSupport,
