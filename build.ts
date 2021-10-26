@@ -115,7 +115,7 @@ esbuild
       window: "self",
       Function: "_Function",
       importScripts: "_importScripts",
-      Buffer: "_Buffer",
+      Buffer: "_Buffer"
     },
     platform: "browser",
     plugins: [moduleShimmer],

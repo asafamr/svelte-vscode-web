@@ -216,7 +216,7 @@ async function getClientOptions(context: ExtensionContext): Promise<LanguageClie
     }
   }
   filesys['/tsconfig.json'] = tsconfigContent;
-  filesys['/node_modules/svelte/index.d.ts'] = 'export * from "/node_modules/svelte/types/runtime/index.d.ts"'
+  filesys['/node_modules/svelte/index.d.ts'] = 'export * from "/node_modules/svelte/types/runtime/index"'
   const allLibs = await fetch(Uri.joinPath(context.extensionUri, "dist/allLibs.json").toString()).then(x=>x.json())
   for(const [lib, content] of Object.entries(allLibs.svelte)){
     filesys['/node_modules/svelte/'+lib] = content as string

@@ -3,7 +3,7 @@ const _self = self as any;
 import "./preshim";
 //@ts-ignore
 import ts from "typescript";
-import { createSystem } from "../../vendored/ts-vfs";
+import { createSystem } from "../../vendored/tsvfs";
 import { configLoader } from "../../vendored/langauge-tools/packages/language-server/src/lib/documents/configLoader";
 
 // import * as vscode from 'vscode';
