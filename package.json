@@ -1,13 +1,12 @@
 {
 	"name": "svelte-web",
 	"description": "",
-	"version": "0.0.2",
+	"version": "0.0.3",
 	"engines": {
 		"vscode": "^1.60.0"
 	},
 	"repository":"https://github.com/asafamr/svelte-vscode-web",
 	"browser": "./dist/web/extension.js",
-	"homepage": "https://github.com/sveltejs/language-tools#readme",
 	"displayName": "Svelte for VS Code Web",
 	"publisher": "asafamr",
 	"icon": "static/logo.png",
