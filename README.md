@@ -4,7 +4,7 @@ This is an unoffical port of svelte vscode extension to vscode web.
 Web extensions can run in both standalonde vscode and browser-based web vscode (used in e.g. github.dev, github1s.com...).
 [Web extensions have some limitations](https://code.visualstudio.com/api/extension-guides/web-extensions).
 
-
+This is still a work in progress, feel free to create issues in the project repo. refernced below.
 
 
 [REPO](https://github.com/asafamr/svelte-vscode-web) readme:
