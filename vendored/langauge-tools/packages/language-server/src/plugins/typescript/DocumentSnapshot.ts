@@ -266,7 +266,8 @@ export class SvelteDocumentSnapshot implements DocumentSnapshot {
 
     async getFragment() {
         if (!this.fragment) {
-            const uri = pathToUrl(this.filePath);
+            // WEBEXT
+            const uri = this.parent.uri; //pathToUrl(this.filePath);
             this.fragment = new SvelteSnapshotFragment(
                 await this.getMapper(uri),
                 this.text,
