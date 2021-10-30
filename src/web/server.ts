@@ -6,8 +6,11 @@
  *--------------------------------------------------------------------------------------------*/
 import "./shim_globals";
 import { configLoader } from "../../vendored/langauge-tools/packages/language-server/src/lib/documents/configLoader";
-import { createConnection, BrowserMessageReader, BrowserMessageWriter,ServerCapabilities ,
-
+import {
+  createConnection,
+  BrowserMessageReader,
+  BrowserMessageWriter,
+  ServerCapabilities,
   ApplyWorkspaceEditParams,
   ApplyWorkspaceEditRequest,
   CodeActionKind,
@@ -36,8 +39,6 @@ import { createConnection, BrowserMessageReader, BrowserMessageWriter,ServerCapa
   TextEdit,
   TextDocumentIdentifier,
   FileChangeType,
-
-
 } from "vscode-languageserver/browser";
 
 // import {
@@ -201,8 +202,7 @@ import {
 // import { FallbackWatcher } from "../../vendored/langauge-tools/packages/language-server/src/lib/FallbackWatcher";
 import { setIsTrusted } from "../../vendored/langauge-tools/packages/language-server/src/importPackage";
 import ts = require("typescript");
-
-
+import { DocumentSnapshot } from "../../vendored/langauge-tools/packages/language-server/src/plugins/typescript/DocumentSnapshot";
 
 export interface LSOptions {
   /**
@@ -216,7 +216,6 @@ export interface LSOptions {
    */
   logErrorsOnly?: boolean;
 }
-
 
 /**
  * Starts the language server.
@@ -246,6 +245,7 @@ function startServer(options?: LSOptions) {
   const docManager = new DocumentManager((textDocument: any) => new Document(textDocument.uri, textDocument.text));
   const configManager = new LSConfigManager();
   const pluginHost = new PluginHost(docManager);
+  let lsts: LSAndTSDocResolver;
   let sveltePlugin: SveltePlugin = undefined as any;
   // let watcher: FallbackWatcher | undefined;
 
@@ -289,7 +289,7 @@ function startServer(options?: LSOptions) {
     for (const [filename, content] of Object.entries(evt.initializationOptions?.filesys || {})) {
       ts.sys.writeFile(filename, content as string);
     }
-    
+
     pluginHost.initialize({
       filterIncompleteCompletions: !evt.initializationOptions?.dontFilterIncompleteCompletions,
       definitionLinkSupport: !!evt.capabilities.textDocument?.definition?.linkSupport,
@@ -297,7 +297,7 @@ function startServer(options?: LSOptions) {
     pluginHost.register((sveltePlugin = new SveltePlugin(configManager)));
     pluginHost.register(new HTMLPlugin(docManager, configManager));
     pluginHost.register(new CSSPlugin(docManager, configManager));
-    const lsts = new LSAndTSDocResolver(
+    lsts = new LSAndTSDocResolver(
       docManager,
       workspaceUris.map(normalizeUri),
       configManager,
@@ -306,11 +306,9 @@ function startServer(options?: LSOptions) {
       "/tsconfig.json"
     );
     pluginHost.register(new TypeScriptPlugin(configManager, lsts));
-    // setTimeout(()=>lsts.updateProjectFiles())
-
     const clientSupportApplyEditCommand = !!evt.capabilities.workspace?.applyEdit;
 
-    const capabilities:ServerCapabilities = {
+    const capabilities: ServerCapabilities = {
       textDocumentSync: {
         openClose: true,
         change: TextDocumentSyncKind.Incremental,
@@ -392,7 +390,7 @@ function startServer(options?: LSOptions) {
         full: true,
       },
       linkedEditingRangeProvider: true,
-    }
+    };
     return {
       capabilities
     };
@@ -505,7 +503,13 @@ function startServer(options?: LSOptions) {
   connection.onDidSaveTextDocument(updateAllDiagnostics);
   connection.onNotification("$/onDidChangeTsOrJsFile", async (e: any) => {
     const path = urlToPath(e.uri);
-    if (path) {
+    if (path && e?.changes?.length) {
+
+      //this should keep ts/js files in sync with outside
+      const current = DocumentSnapshot.fromNonSvelteFilePath(path)
+      current.update(e.changes)
+      ts.sys.writeFile(path, current.getText(0, 1e10))
+      
       pluginHost.updateTsOrJsFile(path, e.changes);
     }
     updateAllDiagnostics();
