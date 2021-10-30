@@ -29,13 +29,15 @@ type CompilerHost = import("typescript").CompilerHost;
 type SourceFile = import("typescript").SourceFile;
 type TS = typeof import("typescript");
 
+declare var localStorage: any;
+
 let hasLocalStorage = false;
 try {
   hasLocalStorage = typeof localStorage !== `undefined`;
 } catch (error) {}
 
 const hasProcess = typeof process !== `undefined`;
-const shouldDebug = true; //(hasLocalStorage && localStorage.getItem("DEBUG")) || (hasProcess && process.env.DEBUG)
+const shouldDebug = (hasLocalStorage && localStorage.getItem("DEBUG")) || (hasProcess && process.env.DEBUG)
 const debugLog = shouldDebug ? console.log : (_message?: any, ..._optionalParams: any[]) => "";
 
 const ts_unpulished = ts as any;
@@ -398,25 +400,29 @@ const libize = (path: string) => path.replace("/", "/lib.").toLowerCase();
  * Creates an in-memory System object which can be used in a TypeScript program, this
  * is what provides read/write aspects of the virtual fs
  */
+
 export function createSystem(files: Map<string, string>): System {
   return {
     args: [],
     createDirectory: () => notImplemented("createDirectory"),
     // TODO: could make a real file tree
     directoryExists: audit("directoryExists", (directory) => {
-      return Array.from(files.keys()).some((path) => path.startsWith(directory));
+       directory = normalizePath(directory);
+      return Array.from(files.keys()).some((path) => path.startsWith(directory+'/'));
     }),
     exit: () => notImplemented("exit"),
     fileExists: audit("fileExists", (fileName) => files.has(fileName) || files.has(libize(fileName))),
     getCurrentDirectory: () => "/",
     getDirectories: audit("getDirectories", (path) => {
       // remove trailing '/'
-      path = path.replace(/\/*$/, "");
+      path = normalizePath(path)
+      const pathSlash = path.replace(/\/*$/,'/')
       return Array.from(
         new Set(
           Array.from(files.keys()).flatMap((x) => {
-            if (!x.startsWith(path)) return [];
-            const rel = x.slice(path.length + 1);
+            if (!x.startsWith(pathSlash)) return [];
+            // if(x.startsWith('/node_modules')) return [];
+            const rel = x.slice(pathSlash.length);
             if (!rel.includes("/")) return [];
             return [rel.slice(0, rel.indexOf("/"))];
           })
@@ -446,9 +452,9 @@ function readDirImp(
 ) {
   const useCaseSensitiveFileNames = true;
 
-  // remove trailing '/'
-  path = path.replace(/\/*$/, "");
-
+  
+  path = normalizePath(path);
+  const pathSlash = path.replace(/\/*$/,'/')
   //https://github.com/microsoft/TypeScript/blob/409be37bf5f73e08c0a881c442c14b5e13d63570/src/compiler/utilities.ts#L6544
   const patterns = ts_unpulished.getFileMatcherPatterns(
     path,
@@ -476,12 +482,12 @@ function readDirImp(
   const ret: string[] = [];
   for (const fname of files) {
     if (
-      fname.startsWith(path + "/") &&
+      fname.startsWith(pathSlash) &&
       (!extensions || ts_unpulished.fileExtensionIsOneOf(fname, extensions)) &&
       (!excludeRegex || !excludeRegex.test(fname)) &&
       (!includeFileRegexes || includeFileRegexes.find((re: RegExp) => re.test(fname)))
     ) {
-      const relative = fname.slice(path.length + 1);
+      const relative = fname.slice(pathSlash.length);
       if (includeDirectoryRegex && relative.includes("/")) {
         const dirname = relative.slice(0, relative.lastIndexOf("/"));
         if (includeDirectoryRegex.test(dirname)) ret.push(relative);
@@ -494,6 +500,11 @@ function readDirImp(
   return ret;
 }
 
+function normalizePath(path:string){
+  if( path === '/' )return path;
+  // remove trailing '/'
+  return path.replace(/\/*$/, "");
+}
 /**
  * Creates a file-system backed System object which can be used in a TypeScript program, you provide
  * a set of virtual files which are prioritised over the FS versions, then a path to the root of your
