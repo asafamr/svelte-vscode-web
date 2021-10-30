@@ -48,6 +48,11 @@ const moduleShimmer: esbuild.Plugin = {
       }));
     }
 
+    build.onLoad({ filter: /\/typescript\/lib\/typescript\.js/ }, async (args) => {
+      const contents = await (await readFile(path.resolve(__dirname, "node_modules/typescript/lib/typescript.js")).then(x=>x.toString())).replace(' debugger;','')
+      return { contents, loader: "ts", resolveDir: path.resolve(__dirname, "node_modules/typescript/lib/") };
+    });
+
     build.onLoad({ filter: /.*/, namespace: moduleShimmerName }, (args) => {
       const contents = moduleShims[args.path];
       return { contents, loader: "ts", resolveDir: "node_modules" };
