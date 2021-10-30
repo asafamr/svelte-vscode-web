@@ -436,10 +436,9 @@ function startServer(options?: LSOptions) {
   connection.onCompletion((evt, cancellationToken) =>
     pluginHost.getCompletions(evt.textDocument, evt.position, evt.context, cancellationToken)
   );
-  connection.onDocumentFormatting((evt) => 
-  {
-    console.log('format')
-  return pluginHost.formatDocument(evt.textDocument, evt.options)});
+  connection.onDocumentFormatting((evt) => {
+    return pluginHost.formatDocument(evt.textDocument, evt.options);
+  });
   connection.onRequest(new RequestType("html/tag"), (evt: any) =>
     pluginHost.doTagComplete(evt.textDocument, evt.position)
   );
@@ -498,10 +497,8 @@ function startServer(options?: LSOptions) {
         fileName: urlToPath(change.uri),
         changeType: change.type,
       }))
-      .filter((change): change is OnWatchFileChangesPara => !!change.fileName && !!change.fileName.match(/\.[jt]s$/));
-
+      .filter((change): change is OnWatchFileChangesPara => !!change.fileName);
     pluginHost.onWatchFileChanges(onWatchFileChangesParas);
-
     updateAllDiagnostics();
   }
 
