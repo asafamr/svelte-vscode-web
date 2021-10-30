@@ -198,7 +198,7 @@ import {
   urlToPath,
 } from "../../vendored/langauge-tools/packages/language-server/src/utils";
 
-import { FallbackWatcher } from "../../vendored/langauge-tools/packages/language-server/src/lib/FallbackWatcher";
+// import { FallbackWatcher } from "../../vendored/langauge-tools/packages/language-server/src/lib/FallbackWatcher";
 import { setIsTrusted } from "../../vendored/langauge-tools/packages/language-server/src/importPackage";
 import ts = require("typescript");
 
@@ -247,7 +247,7 @@ function startServer(options?: LSOptions) {
   const configManager = new LSConfigManager();
   const pluginHost = new PluginHost(docManager);
   let sveltePlugin: SveltePlugin = undefined as any;
-  let watcher: FallbackWatcher | undefined;
+  // let watcher: FallbackWatcher | undefined;
 
   connection.onInitialize((evt) => {
     const workspaceUris = evt.workspaceFolders?.map((folder) => folder.uri.toString()) ?? [evt.rootUri ?? ""];
@@ -258,11 +258,11 @@ function startServer(options?: LSOptions) {
       process.chdir(urlToPath(workspaceUris[0]) ?? "/");
     }
 
-    if (!evt.capabilities.workspace?.didChangeWatchedFiles) {
-      const workspacePaths = workspaceUris.map(urlToPath).filter(isNotNullOrUndefined);
-      watcher = new FallbackWatcher("**/*.{ts,js}", workspacePaths);
-      watcher.onDidChangeWatchedFiles(onDidChangeWatchedFiles);
-    }
+    // if (!evt.capabilities.workspace?.didChangeWatchedFiles) {
+    //   const workspacePaths = workspaceUris.map(urlToPath).filter(isNotNullOrUndefined);
+    //   watcher = new FallbackWatcher("**/*.{ts,js}", workspacePaths);
+    //   watcher.onDidChangeWatchedFiles(onDidChangeWatchedFiles);
+    // }
 
     const isTrusted: boolean = evt.initializationOptions?.isTrusted ?? true;
     configLoader.setDisabled(!isTrusted);
@@ -408,9 +408,9 @@ function startServer(options?: LSOptions) {
     });
   }
 
-  connection.onExit(() => {
-    watcher?.dispose();
-  });
+  // connection.onExit(() => {
+  //   watcher?.dispose();
+  // });
 
   connection.onRenameRequest((req) => pluginHost.rename(req.textDocument, req.position, req.newName));
   connection.onPrepareRename((req) => pluginHost.prepareRename(req.textDocument, req.position));
