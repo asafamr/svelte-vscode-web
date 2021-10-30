@@ -3,6 +3,7 @@
 </script>
 <script lang="ts">
     let myname:string = 'B';
+    import {} from "./tsmod"
     export let paramNum = 100;
 </script>
 
