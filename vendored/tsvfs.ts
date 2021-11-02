@@ -37,7 +37,7 @@ try {
 } catch (error) {}
 
 const hasProcess = typeof process !== `undefined`;
-const shouldDebug = (hasLocalStorage && localStorage.getItem("DEBUG")) || (hasProcess && process.env.DEBUG)
+const shouldDebug = (hasLocalStorage && localStorage.getItem("DEBUG")) || (hasProcess && process.env.DEBUG);
 const debugLog = shouldDebug ? console.log : (_message?: any, ..._optionalParams: any[]) => "";
 
 const ts_unpulished = ts as any;
@@ -61,62 +61,62 @@ export interface VirtualTypeScriptEnvironment {
  * @param customTransformers custom transformers for this compiler run
  */
 
-export function createVirtualTypeScriptEnvironment(
-  sys: System,
-  rootFiles: string[],
-  ts: TS,
-  compilerOptions: CompilerOptions = {},
-  customTransformers?: CustomTransformers
-): VirtualTypeScriptEnvironment {
-  const mergedCompilerOpts = { ...defaultCompilerOptions(ts), ...compilerOptions };
+// export function createVirtualTypeScriptEnvironment(
+//   sys: System,
+//   rootFiles: string[],
+//   ts: TS,
+//   compilerOptions: CompilerOptions = {},
+//   customTransformers?: CustomTransformers
+// ): VirtualTypeScriptEnvironment {
+//   const mergedCompilerOpts = { ...defaultCompilerOptions(ts), ...compilerOptions };
 
-  const { languageServiceHost, updateFile } = createVirtualLanguageServiceHost(
-    sys,
-    rootFiles,
-    mergedCompilerOpts,
-    ts,
-    customTransformers
-  );
-  const languageService = ts.createLanguageService(languageServiceHost);
-  const diagnostics = languageService.getCompilerOptionsDiagnostics();
+//   const { languageServiceHost, updateFile } = createVirtualLanguageServiceHost(
+//     sys,
+//     rootFiles,
+//     mergedCompilerOpts,
+//     ts,
+//     customTransformers
+//   );
+//   const languageService = ts.createLanguageService(languageServiceHost);
+//   const diagnostics = languageService.getCompilerOptionsDiagnostics();
 
-  if (diagnostics.length) {
-    const compilerHost = createVirtualCompilerHost(sys, compilerOptions, ts);
-    throw new Error(ts.formatDiagnostics(diagnostics, compilerHost.compilerHost));
-  }
+//   if (diagnostics.length) {
+//     const compilerHost = createVirtualCompilerHost(sys, compilerOptions, ts);
+//     throw new Error(ts.formatDiagnostics(diagnostics, compilerHost.compilerHost));
+//   }
 
-  return {
-    // @ts-ignore
-    name: "vfs",
-    sys,
-    languageService,
-    getSourceFile: (fileName) => languageService.getProgram()?.getSourceFile(fileName),
+//   return {
+//     // @ts-ignore
+//     name: "vfs",
+//     sys,
+//     languageService,
+//     getSourceFile: (fileName) => languageService.getProgram()?.getSourceFile(fileName),
 
-    createFile: (fileName, content) => {
-      updateFile(ts.createSourceFile(fileName, content, mergedCompilerOpts.target!, false));
-    },
-    updateFile: (fileName, content, optPrevTextSpan) => {
-      const prevSourceFile = languageService.getProgram()!.getSourceFile(fileName);
-      if (!prevSourceFile) {
-        throw new Error("Did not find a source file for " + fileName);
-      }
-      const prevFullContents = prevSourceFile.text;
+//     createFile: (fileName, content) => {
+//       updateFile(ts.createSourceFile(fileName, content, mergedCompilerOpts.target!, false));
+//     },
+//     updateFile: (fileName, content, optPrevTextSpan) => {
+//       const prevSourceFile = languageService.getProgram()!.getSourceFile(fileName);
+//       if (!prevSourceFile) {
+//         throw new Error("Did not find a source file for " + fileName);
+//       }
+//       const prevFullContents = prevSourceFile.text;
 
-      // TODO: Validate if the default text span has a fencepost error?
-      const prevTextSpan = optPrevTextSpan ?? ts.createTextSpan(0, prevFullContents.length);
-      const newText =
-        prevFullContents.slice(0, prevTextSpan.start) +
-        content +
-        prevFullContents.slice(prevTextSpan.start + prevTextSpan.length);
-      const newSourceFile = ts.updateSourceFile(prevSourceFile, newText, {
-        span: prevTextSpan,
-        newLength: content.length,
-      });
+//       // TODO: Validate if the default text span has a fencepost error?
+//       const prevTextSpan = optPrevTextSpan ?? ts.createTextSpan(0, prevFullContents.length);
+//       const newText =
+//         prevFullContents.slice(0, prevTextSpan.start) +
+//         content +
+//         prevFullContents.slice(prevTextSpan.start + prevTextSpan.length);
+//       const newSourceFile = ts.updateSourceFile(prevSourceFile, newText, {
+//         span: prevTextSpan,
+//         newLength: content.length,
+//       });
 
-      updateFile(newSourceFile);
-    },
-  };
-}
+//       updateFile(newSourceFile);
+//     },
+//   };
+// }
 
 /**
  * Grab the list of lib files for a particular target, will return a bit more than necessary (by including
@@ -218,64 +218,64 @@ export const knownLibFilesForCompilerOptions = (compilerOptions: CompilerOptions
  * Sets up a Map with lib contents by grabbing the necessary files from
  * the local copy of typescript via the file system.
  */
-export const createDefaultMapFromNodeModules = (compilerOptions: CompilerOptions, ts?: typeof import("typescript")) => {
-  const tsModule = ts || require("typescript");
-  const path = requirePath();
-  const fs = requireFS();
+// export const createDefaultMapFromNodeModules = (compilerOptions: CompilerOptions, ts?: typeof import("typescript")) => {
+//   const tsModule = ts || require("typescript");
+//   const path = requirePath();
+//   const fs = requireFS();
 
-  const getLib = (name: string) => {
-    const lib = path.dirname(require.resolve("typescript"));
-    return fs.readFileSync(path.join(lib, name), "utf8");
-  };
+//   const getLib = (name: string) => {
+//     const lib = path.dirname(require.resolve("typescript"));
+//     return fs.readFileSync(path.join(lib, name), "utf8");
+//   };
 
-  const libs = knownLibFilesForCompilerOptions(compilerOptions, tsModule);
-  const fsMap = new Map<string, string>();
-  libs.forEach((lib) => {
-    fsMap.set("/" + lib, getLib(lib));
-  });
-  return fsMap;
-};
+//   const libs = knownLibFilesForCompilerOptions(compilerOptions, tsModule);
+//   const fsMap = new Map<string, string>();
+//   libs.forEach((lib) => {
+//     fsMap.set("/" + lib, getLib(lib));
+//   });
+//   return fsMap;
+// };
 
 /**
  * Adds recursively files from the FS into the map based on the folder
  */
-export const addAllFilesFromFolder = (map: Map<string, string>, workingDir: string): void => {
-  const path = requirePath();
-  const fs = requireFS();
+// export const addAllFilesFromFolder = (map: Map<string, string>, workingDir: string): void => {
+//   const path = requirePath();
+//   const fs = requireFS();
 
-  const walk = function (dir: string) {
-    let results: string[] = [];
-    const list = fs.readdirSync(dir);
-    list.forEach(function (file: string) {
-      file = path.join(dir, file);
-      const stat = fs.statSync(file);
-      if (stat && stat.isDirectory()) {
-        /* Recurse into a subdirectory */
-        results = results.concat(walk(file));
-      } else {
-        /* Is a file */
-        results.push(file);
-      }
-    });
-    return results;
-  };
+//   const walk = function (dir: string) {
+//     let results: string[] = [];
+//     const list = fs.readdirSync(dir);
+//     list.forEach(function (file: string) {
+//       file = path.join(dir, file);
+//       const stat = fs.statSync(file);
+//       if (stat && stat.isDirectory()) {
+//         /* Recurse into a subdirectory */
+//         results = results.concat(walk(file));
+//       } else {
+//         /* Is a file */
+//         results.push(file);
+//       }
+//     });
+//     return results;
+//   };
 
-  const allFiles = walk(workingDir);
+//   const allFiles = walk(workingDir);
 
-  allFiles.forEach((lib) => {
-    const fsPath = "/node_modules/@types" + lib.replace(workingDir, "");
-    const content = fs.readFileSync(lib, "utf8");
-    const validExtensions = [".ts", ".tsx"];
+//   allFiles.forEach((lib) => {
+//     const fsPath = "/node_modules/@types" + lib.replace(workingDir, "");
+//     const content = fs.readFileSync(lib, "utf8");
+//     const validExtensions = [".ts", ".tsx"];
 
-    if (validExtensions.includes(path.extname(fsPath))) {
-      map.set(fsPath, content);
-    }
-  });
-};
+//     if (validExtensions.includes(path.extname(fsPath))) {
+//       map.set(fsPath, content);
+//     }
+//   });
+// };
 
 /** Adds all files from node_modules/@types into the FS Map */
-export const addFilesForTypesIntoFolder = (map: Map<string, string>) =>
-  addAllFilesFromFolder(map, "node_modules/@types");
+// export const addFilesForTypesIntoFolder = (map: Map<string, string>) =>
+//   addAllFilesFromFolder(map, "node_modules/@types");
 
 /**
  * Create a virtual FS Map with the lib files from a particular TypeScript
@@ -289,75 +289,75 @@ export const addFilesForTypesIntoFolder = (map: Map<string, string>) =>
  * @param fetcher an optional replacement for the global fetch function (tests mainly)
  * @param storer an optional replacement for the localStorage global (tests mainly)
  */
-export const createDefaultMapFromCDN = (
-  options: CompilerOptions,
-  version: string,
-  cache: boolean,
-  ts: TS,
-  lzstring?: typeof import("lz-string"),
-  fetcher?: typeof fetch,
-  storer?: typeof localStorage
-) => {
-  const fetchlike = fetcher || fetch;
-  const fsMap = new Map<string, string>();
-  const files = knownLibFilesForCompilerOptions(options, ts);
-  const prefix = `https://typescript.azureedge.net/cdn/${version}/typescript/lib/`;
+// export const createDefaultMapFromCDN = (
+//   options: CompilerOptions,
+//   version: string,
+//   cache: boolean,
+//   ts: TS,
+//   lzstring?: typeof import("lz-string"),
+//   fetcher?: typeof fetch,
+//   storer?: typeof localStorage
+// ) => {
+//   const fetchlike = fetcher || fetch;
+//   const fsMap = new Map<string, string>();
+//   const files = knownLibFilesForCompilerOptions(options, ts);
+//   const prefix = `https://typescript.azureedge.net/cdn/${version}/typescript/lib/`;
 
-  function zip(str: string) {
-    return lzstring ? lzstring.compressToUTF16(str) : str;
-  }
+//   function zip(str: string) {
+//     return lzstring ? lzstring.compressToUTF16(str) : str;
+//   }
 
-  function unzip(str: string) {
-    return lzstring ? lzstring.decompressFromUTF16(str) : str;
-  }
+//   function unzip(str: string) {
+//     return lzstring ? lzstring.decompressFromUTF16(str) : str;
+//   }
 
-  // Map the known libs to a node fetch promise, then return the contents
-  function uncached() {
-    return Promise.all(files.map((lib) => fetchlike(prefix + lib).then((resp) => resp.text()))).then((contents) => {
-      contents.forEach((text, index) => fsMap.set("/" + files[index], text));
-    });
-  }
+//   // Map the known libs to a node fetch promise, then return the contents
+//   function uncached() {
+//     return Promise.all(files.map((lib) => fetchlike(prefix + lib).then((resp) => resp.text()))).then((contents) => {
+//       contents.forEach((text, index) => fsMap.set("/" + files[index], text));
+//     });
+//   }
 
-  // A localstorage and lzzip aware version of the lib files
-  function cached() {
-    const storelike = storer || localStorage;
+//   // A localstorage and lzzip aware version of the lib files
+//   function cached() {
+//     const storelike = storer || localStorage;
 
-    const keys = Object.keys(localStorage);
-    keys.forEach((key) => {
-      // Remove anything which isn't from this version
-      if (key.startsWith("ts-lib-") && !key.startsWith("ts-lib-" + version)) {
-        storelike.removeItem(key);
-      }
-    });
+//     const keys = Object.keys(localStorage);
+//     keys.forEach((key) => {
+//       // Remove anything which isn't from this version
+//       if (key.startsWith("ts-lib-") && !key.startsWith("ts-lib-" + version)) {
+//         storelike.removeItem(key);
+//       }
+//     });
 
-    return Promise.all(
-      files.map((lib) => {
-        const cacheKey = `ts-lib-${version}-${lib}`;
-        const content = storelike.getItem(cacheKey);
+//     return Promise.all(
+//       files.map((lib) => {
+//         const cacheKey = `ts-lib-${version}-${lib}`;
+//         const content = storelike.getItem(cacheKey);
 
-        if (!content) {
-          // Make the API call and store the text concent in the cache
-          return fetchlike(prefix + lib)
-            .then((resp) => resp.text())
-            .then((t) => {
-              storelike.setItem(cacheKey, zip(t));
-              return t;
-            });
-        } else {
-          return Promise.resolve(unzip(content));
-        }
-      })
-    ).then((contents) => {
-      contents.forEach((text, index) => {
-        const name = "/" + files[index];
-        fsMap.set(name, text ?? "");
-      });
-    });
-  }
+//         if (!content) {
+//           // Make the API call and store the text concent in the cache
+//           return fetchlike(prefix + lib)
+//             .then((resp) => resp.text())
+//             .then((t) => {
+//               storelike.setItem(cacheKey, zip(t));
+//               return t;
+//             });
+//         } else {
+//           return Promise.resolve(unzip(content));
+//         }
+//       })
+//     ).then((contents) => {
+//       contents.forEach((text, index) => {
+//         const name = "/" + files[index];
+//         fsMap.set(name, text ?? "");
+//       });
+//     });
+//   }
 
-  const func = cache ? cached : uncached;
-  return func().then(() => fsMap);
-};
+//   const func = cache ? cached : uncached;
+//   return func().then(() => fsMap);
+// };
 
 function notImplemented(methodName: string): any {
   throw new Error(`Method '${methodName}' is not implemented.`);
@@ -379,19 +379,19 @@ function audit<ArgsT extends any[], ReturnT>(
 }
 
 /** The default compiler options if TypeScript could ever change the compiler options */
-const defaultCompilerOptions = (ts: typeof import("typescript")): CompilerOptions => {
-  return {
-    ...ts.getDefaultCompilerOptions(),
-    jsx: ts.JsxEmit.React,
-    strict: true,
-    esModuleInterop: true,
-    module: ts.ModuleKind.ESNext,
-    suppressOutputPathCheck: true,
-    skipLibCheck: true,
-    skipDefaultLibCheck: true,
-    moduleResolution: ts.ModuleResolutionKind.NodeJs,
-  };
-};
+// const defaultCompilerOptions = (ts: typeof import("typescript")): CompilerOptions => {
+//   return {
+//     ...ts.getDefaultCompilerOptions(),
+//     jsx: ts.JsxEmit.React,
+//     strict: true,
+//     esModuleInterop: true,
+//     module: ts.ModuleKind.ESNext,
+//     suppressOutputPathCheck: true,
+//     skipLibCheck: true,
+//     skipDefaultLibCheck: true,
+//     moduleResolution: ts.ModuleResolutionKind.NodeJs,
+//   };
+// };
 
 // "/DOM.d.ts" => "/lib.dom.d.ts"
 const libize = (path: string) => path.replace("/", "/lib.").toLowerCase();
@@ -407,16 +407,17 @@ export function createSystem(files: Map<string, string>): System {
     createDirectory: () => notImplemented("createDirectory"),
     // TODO: could make a real file tree
     directoryExists: audit("directoryExists", (directory) => {
-       directory = normalizePath(directory);
-      return Array.from(files.keys()).some((path) => path.startsWith(directory+'/'));
+      directory = normalizePath(directory);
+      const pathSlash = directory.replace(/\/*$/, "/");
+      return Array.from(files.keys()).some((path) => path.startsWith(pathSlash));
     }),
     exit: () => notImplemented("exit"),
     fileExists: audit("fileExists", (fileName) => files.has(fileName) || files.has(libize(fileName))),
     getCurrentDirectory: () => "/",
     getDirectories: audit("getDirectories", (path) => {
       // remove trailing '/'
-      path = normalizePath(path)
-      const pathSlash = path.replace(/\/*$/,'/')
+      path = normalizePath(path);
+      const pathSlash = path.replace(/\/*$/, "/");
       return Array.from(
         new Set(
           Array.from(files.keys()).flatMap((x) => {
@@ -452,9 +453,8 @@ function readDirImp(
 ) {
   const useCaseSensitiveFileNames = true;
 
-  
   path = normalizePath(path);
-  const pathSlash = path.replace(/\/*$/,'/')
+  const pathSlash = path.replace(/\/*$/, "/");
   //https://github.com/microsoft/TypeScript/blob/409be37bf5f73e08c0a881c442c14b5e13d63570/src/compiler/utilities.ts#L6544
   const patterns = ts_unpulished.getFileMatcherPatterns(
     path,
@@ -500,8 +500,8 @@ function readDirImp(
   return ret;
 }
 
-function normalizePath(path:string){
-  if( path === '/' )return path;
+function normalizePath(path: string) {
+  if (path === "/") return path;
   // remove trailing '/'
   return path.replace(/\/*$/, "");
 }
@@ -510,176 +510,176 @@ function normalizePath(path:string){
  * a set of virtual files which are prioritised over the FS versions, then a path to the root of your
  * project (basically the folder your node_modules lives)
  */
-export function createFSBackedSystem(files: Map<string, string>, _projectRoot: string, ts: TS): System {
-  // We need to make an isolated folder for the tsconfig, but also need to be able to resolve the
-  // existing node_modules structures going back through the history
-  const root = _projectRoot + "/vfs";
-  const path = requirePath();
+// export function createFSBackedSystem(files: Map<string, string>, _projectRoot: string, ts: TS): System {
+//   // We need to make an isolated folder for the tsconfig, but also need to be able to resolve the
+//   // existing node_modules structures going back through the history
+//   const root = _projectRoot + "/vfs";
+//   const path = requirePath();
 
-  // The default System in TypeScript
-  const nodeSys = ts.sys;
-  const tsLib = path.dirname(require.resolve("typescript"));
+//   // The default System in TypeScript
+//   const nodeSys = ts.sys;
+//   const tsLib = path.dirname(require.resolve("typescript"));
 
-  return {
-    // @ts-ignore
-    name: "fs-vfs",
-    root,
-    args: [],
-    createDirectory: () => notImplemented("createDirectory"),
-    // TODO: could make a real file tree
-    directoryExists: audit("directoryExists", (directory) => {
-      return Array.from(files.keys()).some((path) => path.startsWith(directory)) || nodeSys.directoryExists(directory);
-    }),
-    exit: nodeSys.exit,
-    fileExists: audit("fileExists", (fileName) => {
-      if (files.has(fileName)) return true;
-      // Don't let other tsconfigs end up touching the vfs
-      if (fileName.includes("tsconfig.json") || fileName.includes("tsconfig.json")) return false;
-      if (fileName.startsWith("/lib")) {
-        const tsLibName = `${tsLib}/${fileName.replace("/", "")}`;
-        return nodeSys.fileExists(tsLibName);
-      }
-      return nodeSys.fileExists(fileName);
-    }),
-    getCurrentDirectory: () => root,
-    getDirectories: nodeSys.getDirectories,
-    getExecutingFilePath: () => notImplemented("getExecutingFilePath"),
-    readDirectory: audit("readDirectory", (...args) => {
-      if (args[0] === "/") {
-        return Array.from(files.keys());
-      } else {
-        return nodeSys.readDirectory(...args);
-      }
-    }),
-    readFile: audit("readFile", (fileName) => {
-      if (files.has(fileName)) return files.get(fileName);
-      if (fileName.startsWith("/lib")) {
-        const tsLibName = `${tsLib}/${fileName.replace("/", "")}`;
-        const result = nodeSys.readFile(tsLibName);
-        if (!result) {
-          const libs = nodeSys.readDirectory(tsLib);
-          throw new Error(
-            `TSVFS: A request was made for ${tsLibName} but there wasn't a file found in the file map. You likely have a mismatch in the compiler options for the CDN download vs the compiler program. Existing Libs: ${libs}.`
-          );
-        }
-        return result;
-      }
-      return nodeSys.readFile(fileName);
-    }),
-    resolvePath: (path) => {
-      if (files.has(path)) return path;
-      return nodeSys.resolvePath(path);
-    },
-    newLine: "\n",
-    useCaseSensitiveFileNames: true,
-    write: () => notImplemented("write"),
-    writeFile: (fileName, contents) => {
-      files.set(fileName, contents);
-    },
-  };
-}
+//   return {
+//     // @ts-ignore
+//     name: "fs-vfs",
+//     root,
+//     args: [],
+//     createDirectory: () => notImplemented("createDirectory"),
+//     // TODO: could make a real file tree
+//     directoryExists: audit("directoryExists", (directory) => {
+//       return Array.from(files.keys()).some((path) => path.startsWith(directory)) || nodeSys.directoryExists(directory);
+//     }),
+//     exit: nodeSys.exit,
+//     fileExists: audit("fileExists", (fileName) => {
+//       if (files.has(fileName)) return true;
+//       // Don't let other tsconfigs end up touching the vfs
+//       if (fileName.includes("tsconfig.json") || fileName.includes("tsconfig.json")) return false;
+//       if (fileName.startsWith("/lib")) {
+//         const tsLibName = `${tsLib}/${fileName.replace("/", "")}`;
+//         return nodeSys.fileExists(tsLibName);
+//       }
+//       return nodeSys.fileExists(fileName);
+//     }),
+//     getCurrentDirectory: () => root,
+//     getDirectories: nodeSys.getDirectories,
+//     getExecutingFilePath: () => notImplemented("getExecutingFilePath"),
+//     readDirectory: audit("readDirectory", (...args) => {
+//       if (args[0] === "/") {
+//         return Array.from(files.keys());
+//       } else {
+//         return nodeSys.readDirectory(...args);
+//       }
+//     }),
+//     readFile: audit("readFile", (fileName) => {
+//       if (files.has(fileName)) return files.get(fileName);
+//       if (fileName.startsWith("/lib")) {
+//         const tsLibName = `${tsLib}/${fileName.replace("/", "")}`;
+//         const result = nodeSys.readFile(tsLibName);
+//         if (!result) {
+//           const libs = nodeSys.readDirectory(tsLib);
+//           throw new Error(
+//             `TSVFS: A request was made for ${tsLibName} but there wasn't a file found in the file map. You likely have a mismatch in the compiler options for the CDN download vs the compiler program. Existing Libs: ${libs}.`
+//           );
+//         }
+//         return result;
+//       }
+//       return nodeSys.readFile(fileName);
+//     }),
+//     resolvePath: (path) => {
+//       if (files.has(path)) return path;
+//       return nodeSys.resolvePath(path);
+//     },
+//     newLine: "\n",
+//     useCaseSensitiveFileNames: true,
+//     write: () => notImplemented("write"),
+//     writeFile: (fileName, contents) => {
+//       files.set(fileName, contents);
+//     },
+//   };
+// }
 
 /**
  * Creates an in-memory CompilerHost -which is essentially an extra wrapper to System
  * which works with TypeScript objects - returns both a compiler host, and a way to add new SourceFile
  * instances to the in-memory file system.
  */
-export function createVirtualCompilerHost(sys: System, compilerOptions: CompilerOptions, ts: TS) {
-  const sourceFiles = new Map<string, SourceFile>();
-  const save = (sourceFile: SourceFile) => {
-    sourceFiles.set(sourceFile.fileName, sourceFile);
-    return sourceFile;
-  };
+// export function createVirtualCompilerHost(sys: System, compilerOptions: CompilerOptions, ts: TS) {
+//   const sourceFiles = new Map<string, SourceFile>();
+//   const save = (sourceFile: SourceFile) => {
+//     sourceFiles.set(sourceFile.fileName, sourceFile);
+//     return sourceFile;
+//   };
 
-  type Return = {
-    compilerHost: CompilerHost;
-    updateFile: (sourceFile: SourceFile) => boolean;
-  };
-
-  const vHost: Return = {
-    compilerHost: {
-      ...sys,
-      getCanonicalFileName: (fileName) => fileName,
-      getDefaultLibFileName: () => "/" + ts.getDefaultLibFileName(compilerOptions), // '/lib.d.ts',
-      // getDefaultLibLocation: () => '/',
-      getDirectories: () => [],
-      getNewLine: () => sys.newLine,
-      getSourceFile: (fileName) => {
-        return (
-          sourceFiles.get(fileName) ||
-          save(
-            ts.createSourceFile(
-              fileName,
-              sys.readFile(fileName)!,
-              compilerOptions.target || defaultCompilerOptions(ts).target!,
-              false
-            )
-          )
-        );
-      },
-      useCaseSensitiveFileNames: () => sys.useCaseSensitiveFileNames,
-    },
-    updateFile: (sourceFile) => {
-      const alreadyExists = sourceFiles.has(sourceFile.fileName);
-      sys.writeFile(sourceFile.fileName, sourceFile.text);
-      sourceFiles.set(sourceFile.fileName, sourceFile);
-      return alreadyExists;
-    },
-  };
-  return vHost;
-}
+//   type Return = {
+//     compilerHost: CompilerHost;
+//     updateFile: (sourceFile: SourceFile) => boolean;
+//   };
+//
+//   const vHost: Return = {
+//     compilerHost: {
+//       ...sys,
+//       getCanonicalFileName: (fileName) => fileName,
+//       getDefaultLibFileName: () => "/" + ts.getDefaultLibFileName(compilerOptions), // '/lib.d.ts',
+//       // getDefaultLibLocation: () => '/',
+//       getDirectories: () => [],
+//       getNewLine: () => sys.newLine,
+//       getSourceFile: (fileName) => {
+//         return (
+//           sourceFiles.get(fileName) ||
+//           save(
+//             ts.createSourceFile(
+//               fileName,
+//               sys.readFile(fileName)!,
+//               compilerOptions.target || defaultCompilerOptions(ts).target!,
+//               false
+//             )
+//           )
+//         );
+//       },
+//       useCaseSensitiveFileNames: () => sys.useCaseSensitiveFileNames,
+//     },
+//     updateFile: (sourceFile) => {
+//       const alreadyExists = sourceFiles.has(sourceFile.fileName);
+//       sys.writeFile(sourceFile.fileName, sourceFile.text);
+//       sourceFiles.set(sourceFile.fileName, sourceFile);
+//       return alreadyExists;
+//     },
+//   };
+//   return vHost;
+// }
 
 /**
  * Creates an object which can host a language service against the virtual file-system
  */
-export function createVirtualLanguageServiceHost(
-  sys: System,
-  rootFiles: string[],
-  compilerOptions: CompilerOptions,
-  ts: TS,
-  customTransformers?: CustomTransformers
-) {
-  const fileNames = [...rootFiles];
-  const { compilerHost, updateFile } = createVirtualCompilerHost(sys, compilerOptions, ts);
-  const fileVersions = new Map<string, string>();
-  let projectVersion = 0;
-  const languageServiceHost: LanguageServiceHost = {
-    ...compilerHost,
-    getProjectVersion: () => projectVersion.toString(),
-    getCompilationSettings: () => compilerOptions,
-    getCustomTransformers: () => customTransformers,
-    getScriptFileNames: () => fileNames,
-    getScriptSnapshot: (fileName) => {
-      const contents = sys.readFile(fileName);
-      if (contents) {
-        return ts.ScriptSnapshot.fromString(contents);
-      }
-      return;
-    },
-    getScriptVersion: (fileName) => {
-      return fileVersions.get(fileName) || "0";
-    },
-    writeFile: sys.writeFile,
-  };
+// export function createVirtualLanguageServiceHost(
+//   sys: System,
+//   rootFiles: string[],
+//   compilerOptions: CompilerOptions,
+//   ts: TS,
+//   customTransformers?: CustomTransformers
+// ) {
+//   const fileNames = [...rootFiles];
+//   const { compilerHost, updateFile } = createVirtualCompilerHost(sys, compilerOptions, ts);
+//   const fileVersions = new Map<string, string>();
+//   let projectVersion = 0;
+//   const languageServiceHost: LanguageServiceHost = {
+//     ...compilerHost,
+//     getProjectVersion: () => projectVersion.toString(),
+//     getCompilationSettings: () => compilerOptions,
+//     getCustomTransformers: () => customTransformers,
+//     getScriptFileNames: () => fileNames,
+//     getScriptSnapshot: (fileName) => {
+//       const contents = sys.readFile(fileName);
+//       if (contents) {
+//         return ts.ScriptSnapshot.fromString(contents);
+//       }
+//       return;
+//     },
+//     getScriptVersion: (fileName) => {
+//       return fileVersions.get(fileName) || "0";
+//     },
+//     writeFile: sys.writeFile,
+//   };
 
-  type Return = {
-    languageServiceHost: LanguageServiceHost;
-    updateFile: (sourceFile: import("typescript").SourceFile) => void;
-  };
+//   type Return = {
+//     languageServiceHost: LanguageServiceHost;
+//     updateFile: (sourceFile: import("typescript").SourceFile) => void;
+//   };
 
-  const lsHost: Return = {
-    languageServiceHost,
-    updateFile: (sourceFile) => {
-      projectVersion++;
-      fileVersions.set(sourceFile.fileName, projectVersion.toString());
-      if (!fileNames.includes(sourceFile.fileName)) {
-        fileNames.push(sourceFile.fileName);
-      }
-      updateFile(sourceFile);
-    },
-  };
-  return lsHost;
-}
+//   const lsHost: Return = {
+//     languageServiceHost,
+//     updateFile: (sourceFile) => {
+//       projectVersion++;
+//       fileVersions.set(sourceFile.fileName, projectVersion.toString());
+//       if (!fileNames.includes(sourceFile.fileName)) {
+//         fileNames.push(sourceFile.fileName);
+//       }
+//       updateFile(sourceFile);
+//     },
+//   };
+//   return lsHost;
+// }
 
 const requirePath = () => {
   return require(String.fromCharCode(112, 97, 116, 104)) as typeof import("path");

@@ -9,10 +9,10 @@ export function clamp(num: number, min: number, max: number): number {
 export function urlToPath(stringUrl: string): string | null {
     const url = URI.parse(stringUrl);
 
-    // WEBEXT
+    /* WEBEXT - commented out block
     // if (url.scheme !== 'file') {
     //     return null;
-    // }
+    // }*/
     return url.fsPath.replace(/\\/g, '/');
 }
 

@@ -1,20 +1,22 @@
 # Svelte VSCode Web Extension
 
 This is an unoffical port of svelte vscode extension to vscode web.
-Web extensions can run in both standalonde vscode and browser-based web vscode (used in e.g. github.dev, github1s.com...).
+Web extensions can run in both standalonde vscode and browser-based web vscode (used in e.g. github.dev, github1s.com, vscode.dev...).
 [Web extensions have some limitations](https://code.visualstudio.com/api/extension-guides/web-extensions).
 
 This is still a work in progress, feel free to create issues in the project repo. refernced below.
+
 
 
 [REPO](https://github.com/asafamr/svelte-vscode-web) readme:
 
 I've started from the web extension starter template but switched to esbuild.
 
-The official language tools repo is vendored but currently unmodified.
+The official language tools repo is vendored ~~but currently unmodified~~ and has some small changes marked with a `WEBEXT` comment
 
-typescript support is preconfigured
+Typescript support is preconfigured
 
+Marketplace extension url: https://marketplace.visualstudio.com/items?itemName=asafamr.svelte-web
 
 <br/>
 <br/>
