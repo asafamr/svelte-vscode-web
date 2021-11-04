@@ -4,11 +4,23 @@ This is an unoffical port of svelte vscode extension to vscode web.
 Web extensions can run in both standalonde vscode and browser-based web vscode (used in e.g. github.dev, github1s.com, vscode.dev...).
 [Web extensions have some limitations](https://code.visualstudio.com/api/extension-guides/web-extensions).
 
-This is still a work in progress, feel free to create issues in the project repo. refernced below.
+## Supported features
+
+- All builtin lanaguge features should be wokring - syntax highlighting, definition navigation, auto completions...
+- Typescript 4.4.4 bundled in with autocompletion across files
+- Prettier formatter
+
+Templating engines (pug, cofeescript...) and styling engines (sass, less...) aren't currenly supported
+
+<br>
+<br>
+
+
+This is still a work in progress, feel free to create issues in the project [repo](https://github.com/asafamr/svelte-vscode-web).
 
 
 
-[REPO](https://github.com/asafamr/svelte-vscode-web) readme:
+repo readme:
 
 I've started from the web extension starter template but switched to esbuild.
 
