@@ -1,5 +1,6 @@
 import ts from 'typescript';
 import { Location, Position, ReferenceContext } from 'vscode-languageserver';
+import { URI } from 'vscode-uri';
 import { Document } from '../../../lib/documents';
 import { pathToUrl } from '../../../utils';
 import { FindReferencesProvider } from '../../interfaces';
@@ -15,6 +16,8 @@ export class FindReferencesProviderImpl implements FindReferencesProvider {
         position: Position,
         context: ReferenceContext
     ): Promise<Location[] | null> {
+        // WEBEXT scheme used below
+        const {scheme} = URI.parse(document.getURL())
         const { lang, tsDoc } = await this.getLSAndTSDoc(document);
         const fragment = await tsDoc.getFragment();
 
@@ -37,7 +40,8 @@ export class FindReferencesProviderImpl implements FindReferencesProvider {
                     const defDoc = await docs.retrieveFragment(ref.fileName);
 
                     return Location.create(
-                        pathToUrl(ref.fileName),
+                        // WEBEXT scheme of source doc
+                        pathToUrl(ref.fileName, scheme),
                         convertToLocationRange(defDoc, ref.textSpan)
                     );
                 })

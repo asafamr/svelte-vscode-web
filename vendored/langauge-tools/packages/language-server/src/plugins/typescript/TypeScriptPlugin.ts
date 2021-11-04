@@ -25,6 +25,7 @@ import {
 import { Document, getTextInRange, mapSymbolInformationToOriginal } from '../../lib/documents';
 import { LSConfigManager, LSTypescriptConfig } from '../../ls-config';
 import { isNotNullOrUndefined, pathToUrl } from '../../utils';
+import {URI} from "vscode-uri"
 import {
     AppCompletionItem,
     AppCompletionList,
@@ -266,7 +267,8 @@ export class TypeScriptPlugin
         if (!this.featureEnabled('definitions')) {
             return [];
         }
-
+        // WEBEXT scheme used below
+        const {scheme} = URI.parse(document.getURL());
         const { lang, tsDoc } = await this.getLSAndTSDoc(document);
         const mainFragment = await tsDoc.getFragment();
 
@@ -288,7 +290,8 @@ export class TypeScriptPlugin
 
                 if (isNoTextSpanInGeneratedCode(snapshot.getFullText(), def.textSpan)) {
                     return LocationLink.create(
-                        pathToUrl(def.fileName),
+                        // WEBEXT - use source doc scheme for now
+                        pathToUrl(def.fileName, scheme),
                         convertToLocationRange(fragment, def.textSpan),
                         convertToLocationRange(fragment, def.textSpan),
                         convertToLocationRange(mainFragment, defs.textSpan)

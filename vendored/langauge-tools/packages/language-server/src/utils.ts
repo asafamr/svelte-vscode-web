@@ -16,8 +16,9 @@ export function urlToPath(stringUrl: string): string | null {
     return url.fsPath.replace(/\\/g, '/');
 }
 
-export function pathToUrl(path: string) {
-    return URI.file(path).toString();
+export function pathToUrl(path: string, scheme="file") {
+    // WEBEXT - file scheme overridable
+    return URI.file(path).toString().replace(/^file/, scheme);
 }
 
 /**
