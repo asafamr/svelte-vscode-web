@@ -203,6 +203,7 @@ import {
 import { setIsTrusted } from "../../vendored/langauge-tools/packages/language-server/src/importPackage";
 import ts = require("typescript");
 import { DocumentSnapshot } from "../../vendored/langauge-tools/packages/language-server/src/plugins/typescript/DocumentSnapshot";
+import { knownLibFilesForCompilerOptions } from "../../vendored/tsvfs";
 
 export interface LSOptions {
   /**
@@ -286,8 +287,18 @@ function startServer(options?: LSOptions) {
       evt.initializationOptions?.configuration?.prettier || evt.initializationOptions?.prettierConfig || {}
     );
 
+    const tsconftxt = ts.readConfigFile('-',(_)=>evt.initializationOptions?.filesys['/tsconfig.json']).config
+    const parsedConfig = ts.parseJsonConfigFileContent(tsconftxt,ts.sys,'/')
+    const tslibs = knownLibFilesForCompilerOptions(parsedConfig.options,ts)
     for (const [filename, content] of Object.entries(evt.initializationOptions?.filesys || {})) {
-      ts.sys.writeFile(filename, content as string);
+      if(filename.match(/lib\..*\.d\.ts$/)){
+        if(tslibs.includes(filename.replace(/^\//,''))){
+          ts.sys.writeFile(filename, content as string);
+        }
+      }
+      else{
+        ts.sys.writeFile(filename, content as string);
+      }
     }
 
     pluginHost.initialize({

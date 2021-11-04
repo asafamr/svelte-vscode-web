@@ -113,7 +113,6 @@ export async function activate(context: ExtensionContext) {
 
     restartingLs = true;
     await ls.stop();
-    getClientOptions;
     dispose();
     ls = createWorkerLanguageClient(context, await getClientOptions(context));
     lsDisposable = ls.start();
