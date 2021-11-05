@@ -24,8 +24,7 @@
 	],
 	"capabilities": {
 		"untrustedWorkspaces": {
-			"supported": "limited",
-			"description": "The extension requires workspace trust because it executes code specified by the workspace. Loading the user's node_modules and loading svelte config files is disabled when untrusted"
+			"supported": true
 		}
 	},
 	"contributes": {
