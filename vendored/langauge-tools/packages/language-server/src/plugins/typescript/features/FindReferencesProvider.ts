@@ -16,8 +16,8 @@ export class FindReferencesProviderImpl implements FindReferencesProvider {
         position: Position,
         context: ReferenceContext
     ): Promise<Location[] | null> {
-        // WEBEXT scheme used below
-        const {scheme} = URI.parse(document.getURL())
+        // WEBEXT used below
+        const {scheme, authority} = URI.parse(document.getURL())
         const { lang, tsDoc } = await this.getLSAndTSDoc(document);
         const fragment = await tsDoc.getFragment();
 
@@ -41,8 +41,8 @@ export class FindReferencesProviderImpl implements FindReferencesProvider {
 
                     return Location.create(
                         // WEBEXT scheme of source doc
-                        pathToUrl(ref.fileName, scheme),
-                        convertToLocationRange(defDoc, ref.textSpan)
+                        URI.from({scheme, authority, path:ref.fileName}).toString(),
+                        convertToLocationRange(defDoc, ref.textSpan) 
                     );
                 })
         );

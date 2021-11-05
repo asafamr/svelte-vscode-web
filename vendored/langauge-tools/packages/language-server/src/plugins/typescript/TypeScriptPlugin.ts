@@ -268,7 +268,7 @@ export class TypeScriptPlugin
             return [];
         }
         // WEBEXT scheme used below
-        const {scheme} = URI.parse(document.getURL());
+        const {scheme, authority} = URI.parse(document.getURL());
         const { lang, tsDoc } = await this.getLSAndTSDoc(document);
         const mainFragment = await tsDoc.getFragment();
 
@@ -290,8 +290,8 @@ export class TypeScriptPlugin
 
                 if (isNoTextSpanInGeneratedCode(snapshot.getFullText(), def.textSpan)) {
                     return LocationLink.create(
-                        // WEBEXT - use source doc scheme for now
-                        pathToUrl(def.fileName, scheme),
+                        // WEBEXT - use source doc scheme, authority for now
+                        URI.from({scheme, authority, path:def.fileName}).toString(),
                         convertToLocationRange(fragment, def.textSpan),
                         convertToLocationRange(fragment, def.textSpan),
                         convertToLocationRange(mainFragment, defs.textSpan)
