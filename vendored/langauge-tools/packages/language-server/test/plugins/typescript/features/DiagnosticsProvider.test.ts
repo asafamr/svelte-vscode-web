@@ -797,6 +797,50 @@ describe('DiagnosticsProvider', () => {
         ]);
     });
 
+    it('properly handles complex types for `each` blocks (diagnostics-each)', async () => {
+        const { plugin, document } = setup('diagnostics-each.svelte');
+        const diagnostics = await plugin.getDiagnostics(document);
+
+        assert.deepStrictEqual(diagnostics, [
+            {
+                code: 2345,
+                message:
+                    "Argument of type '{}' is not assignable to parameter of type 'ArrayLike<unknown>'.\n  Property 'length' is missing in type '{}' but required in type 'ArrayLike<unknown>'.",
+                range: {
+                    end: {
+                        character: 24,
+                        line: 26
+                    },
+                    start: {
+                        character: 7,
+                        line: 26
+                    }
+                },
+                severity: 1,
+                source: 'ts',
+                tags: []
+            },
+            {
+                code: 2345,
+                message:
+                    "Argument of type 'number' is not assignable to parameter of type 'ArrayLike<unknown>'.",
+                range: {
+                    end: {
+                        character: 24,
+                        line: 30
+                    },
+                    start: {
+                        character: 7,
+                        line: 30
+                    }
+                },
+                severity: 1,
+                source: 'ts',
+                tags: []
+            }
+        ]);
+    });
+
     it('ignores diagnostics in generated code', async () => {
         const { plugin, document } = setup('diagnostics-ignore-generated.svelte');
         const diagnostics = await plugin.getDiagnostics(document);
@@ -1850,6 +1894,205 @@ describe('DiagnosticsProvider', () => {
                 },
                 severity: 1,
                 source: 'ts',
+                tags: []
+            }
+        ]);
+    });
+
+    it('diagnoses bind:this', async () => {
+        const { plugin, document } = setup('diagnostics-bind-this.svelte');
+
+        const diagnostics = await plugin.getDiagnostics(document);
+        assert.deepStrictEqual(diagnostics, [
+            {
+                range: {
+                    start: {
+                        line: 14,
+                        character: 6
+                    },
+                    end: {
+                        line: 14,
+                        character: 13
+                    }
+                },
+                severity: 4,
+                source: 'ts',
+                message: "'element' is declared but its value is never read.",
+                code: 6133,
+                tags: [1]
+            },
+            {
+                range: {
+                    start: {
+                        line: 23,
+                        character: 2
+                    },
+                    end: {
+                        line: 23,
+                        character: 11
+                    }
+                },
+                severity: 1,
+                source: 'ts',
+                message: "Variable 'component' is used before being assigned.",
+                code: 2454,
+                tags: []
+            },
+            {
+                range: {
+                    start: {
+                        line: 44,
+                        character: 16
+                    },
+                    end: {
+                        line: 44,
+                        character: 23
+                    }
+                },
+                severity: 1,
+                source: 'ts',
+                message:
+                    "Type 'HTMLDivElement' is missing the following properties from type 'HTMLInputElement': accept, alt, autocomplete, capture, and 51 more.",
+                code: 2740,
+                tags: []
+            },
+            {
+                range: {
+                    start: {
+                        line: 45,
+                        character: 34
+                    },
+                    end: {
+                        line: 45,
+                        character: 48
+                    }
+                },
+                severity: 1,
+                source: 'ts',
+                message:
+                    "Type 'Component' is not assignable to type 'OtherComponent'.\n" +
+                    "  Types of property '$set' are incompatible.\n" +
+                    "    Type '(props?: Partial<{ prop: boolean; }> | undefined) => void' is not assignable to type '(props?: Partial<{ prop: string; }> | undefined) => void'.\n" +
+                    "      Types of parameters 'props' and 'props' are incompatible.\n" +
+                    "        Type 'Partial<{ prop: string; }> | undefined' is not assignable to type 'Partial<{ prop: boolean; }> | undefined'.\n" +
+                    "          Type 'Partial<{ prop: string; }>' is not assignable to type 'Partial<{ prop: boolean; }>'.\n" +
+                    "            Types of property 'prop' are incompatible.\n" +
+                    "              Type 'string | undefined' is not assignable to type 'boolean | undefined'.\n" +
+                    "                Type 'string' is not assignable to type 'boolean | undefined'.",
+                code: 2322,
+                tags: []
+            },
+            {
+                range: {
+                    start: {
+                        line: 46,
+                        character: 35
+                    },
+                    end: {
+                        line: 46,
+                        character: 57
+                    }
+                },
+                severity: 1,
+                source: 'ts',
+                message:
+                    "Type 'ComponentWithFunction1' is not assignable to type 'ComponentWithFunction2'.\n" +
+                    "  Types of property 'action' are incompatible.\n" +
+                    "    Type '(a: number) => string | number' is not assignable to type '() => string'.",
+                code: 2322,
+                tags: []
+            },
+            {
+                range: {
+                    start: {
+                        line: 47,
+                        character: 46
+                    },
+                    end: {
+                        line: 47,
+                        character: 60
+                    }
+                },
+                severity: 1,
+                source: 'ts',
+                message: "Type 'Component' is not assignable to type 'OtherComponent'.",
+                code: 2322,
+                tags: []
+            }
+        ]);
+    });
+
+    it('diagnoses bindings with $store', async () => {
+        const { plugin, document } = setup('bind-to-$store.svelte');
+
+        const diagnostics = await plugin.getDiagnostics(document);
+        assert.deepStrictEqual(diagnostics, [
+            {
+                range: {
+                    start: {
+                        line: 19,
+                        character: 33
+                    },
+                    end: {
+                        line: 19,
+                        character: 34
+                    }
+                },
+                severity: 1,
+                source: 'ts',
+                message: "Type 'number' is not assignable to type 'boolean'.",
+                code: 2322,
+                tags: []
+            },
+            {
+                range: {
+                    start: {
+                        line: 20,
+                        character: 16
+                    },
+                    end: {
+                        line: 20,
+                        character: 20
+                    }
+                },
+                severity: 1,
+                source: 'ts',
+                message: "Type 'boolean' is not assignable to type 'number'.",
+                code: 2322,
+                tags: []
+            },
+            {
+                range: {
+                    start: {
+                        line: 21,
+                        character: 24
+                    },
+                    end: {
+                        line: 21,
+                        character: 41
+                    }
+                },
+                severity: 1,
+                source: 'ts',
+                message: "Type 'number' is not assignable to type 'boolean'.",
+                code: 2322,
+                tags: []
+            },
+            {
+                range: {
+                    start: {
+                        line: 22,
+                        character: 16
+                    },
+                    end: {
+                        line: 22,
+                        character: 20
+                    }
+                },
+                severity: 1,
+                source: 'ts',
+                message: "Type 'boolean' is not assignable to type 'number'.",
+                code: 2322,
                 tags: []
             }
         ]);
