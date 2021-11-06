@@ -10,19 +10,24 @@ Web extensions can run in both standalonde vscode and browser-based web vscode (
 - Typescript 4.4.4 bundled in with autocompletion across files
 - Prettier formatter
 
-Templating engines (pug, cofeescript...) and styling engines (sass, less...) aren't currenly supported
+## Unsupported features
+Templating engines (pug, cofeescript...) and styling engines (sass, less...) aren't currenly supported. 
+Importing Svelte components from typescript isn't supported either.
 
 <br>
 <br>
 
+See it in action in github.dev [here](https://github.dev/asafamr/svelte-web-preview) (Install the recommanded extension when asked)
+
+<br>
+<br>
 
 This is still a work in progress, feel free to create issues in the project [repo](https://github.com/asafamr/svelte-vscode-web).
 
 
-
 repo readme:
 
-I've started from the web extension starter template but switched to esbuild.
+I started from the web extension starter template but switched to esbuild.
 
 The official language tools repo is vendored ~~but currently unmodified~~ and has some small changes marked with a `WEBEXT` comment
 
