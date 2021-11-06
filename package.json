@@ -120,11 +120,13 @@
 		"run-in-browser:ff": "vscode-test-web --browserType=firefox --extensionDevelopmentPath=. test",
 		"vscode:prepublish": "npm run compile",
 		"vspub": "vsce publish",
-		"test": "echo should add tests || vscode-test-web --browserType=chromium --extensionDevelopmentPath=. --extensionTestsPath=dist/web/test/suite/index.js"
+		"test": "node -r esbuild-register build-test.ts && vscode-test-web --browserType=chromium --extensionDevelopmentPath=. --extensionTestsPath=dist/web/test/suite/index.js test",
+		"test-cleaner-cli": "npm run test | grep -v \"GET /\""
 	},
 	"devDependencies": {
 		"@babel/core": "^7.15.8",
 		"@tsconfig/node12": "^1.0.9",
+		"@types/chai": "^4.2.22",
 		"@types/fs-extra": "^9.0.13",
 		"@types/lz-string": "^1.3.34",
 		"@types/mocha": "^9.0.0",
@@ -137,6 +139,7 @@
 		"@vscode/test-web": "^0.0.13",
 		"assert": "^2.0.0",
 		"buffer": "^5.7.1",
+		"chai": "^4.3.4",
 		"dedent": "^0.7.0",
 		"esbuild": "^0.13.4",
 		"esbuild-register": "^3.0.0",

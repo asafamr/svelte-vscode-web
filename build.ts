@@ -2,9 +2,8 @@ import * as esbuild from "esbuild";
 
 import { readdirSync, readFileSync } from "fs";
 import path from "path";
-import { writeFile, readFile, mkdir, readdir, copyFile } from "fs/promises";
+import { writeFile, readFile, copyFile } from "fs/promises";
 import glob from "fast-glob";
-import { copy } from "fs-extra";
 const dev = process.argv.includes("--dev");
 
 const sourcesContent = dev;
@@ -58,11 +57,6 @@ const moduleShimmer: esbuild.Plugin = {
       return { contents, loader: "ts", resolveDir: "node_modules" };
     });
 
-    // not used - d.ts's can be fetched asyncly
-    // build.onLoad({ filter: /\.d\.ts$/ }, async (args) => {
-    //   const content = await readFile(args.path);
-    //   return { contents: lzs.compressToBase64(content.toString()), loader: "text" };
-    // });
   },
 };
 

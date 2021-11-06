@@ -1,7 +1,8 @@
 # Change Log
 
 ## [Unreleased]
-- e2e & unit tests
+- merged latest language tools (Nov 6. 2021)
+- e2e tests
 
 ## [0.2.1]
 - goto defenition/declartion - fix in vscode.dev vfs

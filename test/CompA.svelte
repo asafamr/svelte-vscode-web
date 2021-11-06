@@ -11,3 +11,13 @@ it inlcudes
     
     an import: {moduleExport}
 </div>
+
+<style>
+    div{
+        color: red;
+        background-color: aliceblue;
+    }
+    .some-div{
+        color: #7f7f7f
+    }
+</style>

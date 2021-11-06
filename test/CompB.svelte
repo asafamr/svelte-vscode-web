@@ -3,7 +3,7 @@
 </script>
 <script lang="ts">
     let myname:string = 'B';
-    import {} from "./tsmod"
+    import {PI_REAL} from "./tsmod"
     export let paramNum = 100;
 </script>
 

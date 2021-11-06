@@ -3,15 +3,14 @@ require('mocha/mocha');
 
 export function run(): Promise<void> {
 
-	return new Promise((c, e) => {
+	return new Promise(async (c, e) => {
 		mocha.setup({
 			ui: 'tdd',
-			reporter: undefined
+			reporter: undefined,
+			timeout:20000
 		});
 
-		// bundles all files in the current directory matching `*.test`
-		const importAll = (r: __WebpackModuleApi.RequireContext) => r.keys().forEach(r);
-		importAll(require.context('.', true, /\.test$/));
+		await import('./extension.test')
 
 		try {
 			// Run the mocha test
