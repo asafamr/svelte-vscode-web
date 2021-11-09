@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -e
 
-npm run install
+npm install
 rm -rf dist
 npm run compile
 npm run test:full-headless
