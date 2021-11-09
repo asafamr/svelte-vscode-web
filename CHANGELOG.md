@@ -1,7 +1,9 @@
 # Change Log
 
-## [Unreleased]
-- merged latest language tools (Nov 6. 2021)
+<!-- ## [Unreleased] -->
+
+## [0.3.0]
+- merged latest language tools (Nov 6. 2021, v0.14.11)
 - e2e tests
 
 ## [0.2.1]
