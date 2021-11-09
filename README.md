@@ -27,6 +27,8 @@ This is still a work in progress, feel free to create issues in the project [rep
 
 repo readme:
 
+![E2E Tests](https://github.com/asafamr/svelte-vscode-web/actions/workflows/tests.yml/badge.svg)
+
 I started from the web extension starter template but switched to esbuild.
 
 The official language tools repo is vendored ~~but currently unmodified~~ and has some small changes marked with a `WEBEXT` comment

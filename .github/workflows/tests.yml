@@ -1,4 +1,4 @@
-name: e2e browser tests
+name: E2E browser tests
 
 on:
   push:
@@ -6,6 +6,9 @@ on:
   pull_request:
     branches: [ master ]
   workflow_dispatch:
+  schedule:
+    - cron:  '0 0 */2 * *'
+    
 jobs:
   test:
     runs-on: ubuntu-latest
