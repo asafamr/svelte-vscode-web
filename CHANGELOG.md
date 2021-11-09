@@ -2,7 +2,7 @@
 
 <!-- ## [Unreleased] -->
 
-## [0.3.0]
+## [0.3.1]
 - merged latest language tools (Nov 6. 2021, v0.14.11)
 - e2e tests
 

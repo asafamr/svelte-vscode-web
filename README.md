@@ -1,23 +1,23 @@
 # Svelte VSCode Web Extension
 
-This is an unoffical port of svelte vscode extension to vscode web.
-Web extensions can run in both standalonde vscode and browser-based web vscode (used in e.g. github.dev, github1s.com, vscode.dev...).
+This is an unofficial port of the Svelte VSCode extension to VSCode web.
+Web extensions can run in both standalone vscode and browser-based web vscode (used in e.g. github.dev, github1s.com, vscode.dev...).
 [Web extensions have some limitations](https://code.visualstudio.com/api/extension-guides/web-extensions).
 
 ## Supported features
 
-- All builtin lanaguge features should be wokring - syntax highlighting, definition navigation, auto completions...
+- All builtin language features should be working - syntax highlighting, definition navigation, auto completions...
 - Typescript 4.4.4 bundled in with autocompletion across files
 - Prettier formatter
 
 ## Unsupported features
-Templating engines (pug, cofeescript...) and styling engines (sass, less...) aren't currenly supported. 
+Templating engines (pug, cofeescript...) and styling engines (sass, less...) aren't currently supported. 
 Importing Svelte components from typescript isn't supported either.
 
 <br>
 <br>
 
-See it in action in github.dev [here](https://github.dev/asafamr/svelte-web-preview) (Install the recommanded extension when asked)
+See it in action in github.dev [here](https://github.dev/asafamr/svelte-web-preview) (Install the recommended extension when asked)
 
 <br>
 <br>
@@ -52,7 +52,7 @@ start esbuild watch with `npm run dev-watch`
 
 then either:
 
-run in vscode with `F5` (debug with electorn dev tools - ctrl+shift+I) or
+run in vscode with `F5` (debug with electron dev tools - ctrl+shift+I) or
 
 run in browser with `npm run run-in-browser` (debug with browser dev tools)
 
