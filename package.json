@@ -120,7 +120,8 @@
 		"run-in-browser:ff": "vscode-test-web --browserType=firefox --extensionDevelopmentPath=. test",
 		"vscode:prepublish": "npm run compile",
 		"vspub": "vsce publish",
-		"test": "node -r esbuild-register build-test.ts && vscode-test-web --browserType=chromium --extensionDevelopmentPath=. --extensionTestsPath=dist/web/test/suite/index.js test",
+		"build:test": "node -r esbuild-register build-test.ts",
+		"test": "npm run build:test && vscode-test-web --browserType=chromium --extensionDevelopmentPath=. --extensionTestsPath=dist/web/test/suite/index.js test",
 		"test-cleaner-cli": "npm run test | grep -v \"GET /\""
 	},
 	"devDependencies": {

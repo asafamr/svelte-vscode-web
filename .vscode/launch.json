@@ -34,7 +34,7 @@
 			"outFiles": [
 				"${workspaceFolder}/dist/web/**/*.js"
 			],
-			// "preLaunchTask": "npm: watch-web"
+			"preLaunchTask": "npm: build:test"
 		}
 	]
 }

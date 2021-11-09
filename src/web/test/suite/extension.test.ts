@@ -9,15 +9,26 @@ async function waitSeconds(secs: number) {
 }
 suite("Web Extension Test Suite", () => {
   vscode.window.showInformationMessage("Start all tests.");
+  
+  
+  let compAUri:vscode.Uri;
+  let compBUri:vscode.Uri;
+  let unformattedUri:vscode.Uri;
 
-  const compAUri = vscode.Uri.from({ scheme: "vscode-test-web", path: "/CompA.svelte" });
-  const compBUri = vscode.Uri.from({ scheme: "vscode-test-web", path: "/CompB.svelte" });
-  const unformattedUri = vscode.Uri.from({ scheme: "vscode-test-web", path: "/Unformatted.svelte" });
+  
 
   suiteSetup(async () => {
     const ext = vscode.extensions.getExtension("asafamr.svelte-web");
     assert.isOk(ext, "Could not activate extension!");
     await ext!.activate();
+
+	const scheme = ext?.extensionUri.scheme === 'file' ? 'file':"vscode-test-web";
+  	const pathPrefix = scheme==='file'? ext?.extensionUri.fsPath+'/test':'';
+
+	compAUri = vscode.Uri.from({ scheme, path: pathPrefix+"/CompA.svelte" });
+	compBUri = vscode.Uri.from({ scheme, path: pathPrefix+"/CompB.svelte" });
+	unformattedUri = vscode.Uri.from({ scheme, path: pathPrefix+"/Unformatted.svelte" });
+
     await waitSeconds(3);
   });
 
@@ -30,11 +41,11 @@ suite("Web Extension Test Suite", () => {
 
   test("Formatter", async () => {
     const doc = await vscode.workspace.openTextDocument(unformattedUri);
-    const textEdits = (await vscode.commands.executeCommand("vscode.executeFormatDocumentProvider", doc.uri, {tabsize: 1})) as any[];
+    const textEdits = (await vscode.commands.executeCommand("vscode.executeFormatDocumentProvider", doc.uri, { insertSpaces: true, tabSize: 2 })) as any[];
 	const workEdits = new vscode.WorkspaceEdit();
 	workEdits.set(doc.uri, textEdits);
 	await vscode.workspace.applyEdit(workEdits);
-	assert.equal(doc.getText(), '<script context="module" lang="ts">\n\texport const moduleExport: string = "exp";\n</script>\n\n<script>\n\tlet myname = "B";\n\texport let paramNum = 100;\n</script>\n\nthis is comp {myname}<!----->\nparam {paramNum}\n\n<style>\n\tdiv {\n\t\tcolor: var(--asd, blue); /* --- */\n\t}\n</style>\n')
+	assert.equal(doc.getText(), '<script context="module" lang="ts">\n  export const moduleExport: string = "exp";\n</script>\n\n<script>\n  let myname = "B";\n  export let paramNum = 100;\n</script>\n\nthis is comp {myname}<!----->\nparam {paramNum}\n\n<style>\n  div {\n    color: var(--asd, blue); /* --- */\n  }\n</style>\n')
   });
 
   test('ColorProvider', async () => {
