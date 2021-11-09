@@ -5,6 +5,7 @@
 	"engines": {
 		"vscode": "^1.60.0"
 	},
+	"license" : "MIT",
 	"repository": "https://github.com/asafamr/svelte-vscode-web",
 	"browser": "./dist/web/extension.js",
 	"displayName": "Svelte for VS Code Web",
