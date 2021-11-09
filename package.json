@@ -122,7 +122,7 @@
 		"vspub": "vsce publish",
 		"build:test": "node -r esbuild-register build-test.ts",
 		"test": "npm run build:test && vscode-test-web --browserType=chromium --extensionDevelopmentPath=. --extensionTestsPath=dist/web/test/suite/index.js test",
-		"test-cleaner-cli": "npm run test | grep -v \"GET /\""
+		"test-cleaner-output": "npm run test | grep -v \"GET /\""
 	},
 	"devDependencies": {
 		"@babel/core": "^7.15.8",

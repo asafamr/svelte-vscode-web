@@ -26,6 +26,7 @@
 			"debugWebWorkerHost": true,
 			"request": "launch",
 			"args": [
+				"--disable-extensions",
 				"--extensionDevelopmentPath=${workspaceFolder}",
 				"--extensionDevelopmentKind=web",
 				"--extensionTestsPath=${workspaceFolder}/dist/web/test/suite/index",
