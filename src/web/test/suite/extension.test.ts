@@ -38,7 +38,7 @@ suite("Web Extension Test Suite", () => {
       doc.uri,
       pos
     )) as vscode.DefinitionLink[];
-    assert.include(res[0].targetUri.path, "CompB.svelte");
+    assert.include(res[0].targetUri.path, "CompCCCCCC.svelte");
   });
 
   test("TsDefGotoAnotherFile", async () => {
@@ -120,7 +120,7 @@ suite("Web Extension Test Suite", () => {
       32,
     ]);
   });
-  
+
   test("SymbolsProvider", async () => {
     const doc = await vscode.workspace.openTextDocument(compBUri);
     const symbols = (await vscode.commands.executeCommand("vscode.executeDocumentSymbolProvider", doc.uri)) as any[];
