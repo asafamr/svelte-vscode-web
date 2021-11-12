@@ -136,6 +136,8 @@ export async function activate(context: ExtensionContext) {
 
   addExtracComponentCommand(getLS, context);
 
+  addBundleCommand(getLS, context);
+
   languages.setLanguageConfiguration("svelte", {
     indentationRules: {
       // Matches a valid opening tag that is:
@@ -422,4 +424,50 @@ async function readDirToDict(paths: Uri[], extensions: string[]) {
     });
   }
   return res;
+}
+
+function addBundleCommand(getLS: () => LanguageClient, context: ExtensionContext) {
+  disposables.push(
+    commands.registerTextEditorCommand("svelte.webGetBundled", async (editor) => {
+      if (editor?.document?.languageId !== "svelte") {
+        return;
+      }
+      window.withProgress({ location: ProgressLocation.Window, title: "Bundling..." }, async () => {
+        const uriStart= editor.document.uri.toString()
+        const bundle = await getLS().sendRequest('$/getBundle',uriStart) as string;
+        
+        const panel = window.createWebviewPanel("svelte.bundle", "Bundled "+uriStart,ViewColumn.Beside,
+        {
+          enableScripts:true
+        })
+       
+        const assrc= 'data:text/javascript;base64,'+btoa(bundle)
+        panel.webview.html = ` 
+        <!DOCTYPE html>
+<html>
+<head>
+    <meta charset='utf-8'>
+    <meta http-equiv='X-UA-Compatible' content='IE=edge'>
+    <title>Bundle</title>
+    <meta name='viewport' content='width=device-width, initial-scale=1'>
+    <script src='${assrc}'></script>
+    <style>
+        body,html{
+          border:None;
+          padding:0;
+          margin:0;
+        }
+    </style>
+</head>
+<body>
+    <div id="main"> </div>
+    <script>
+    new __Comp({target: document.getElementById('main') })
+    </script>
+</body>
+</html>
+        `
+      });
+    })
+  );
 }

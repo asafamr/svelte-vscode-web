@@ -25,6 +25,9 @@ import {
   TextDocumentIdentifier,
 } from "vscode-languageserver/browser";
 
+import * as uniroll from "uniroll";
+import * as path from "path";
+
 console.debug("Svelte Web server starting...");
 
 declare var self: any;
@@ -62,6 +65,8 @@ import { setIsTrusted } from "../../vendored/langauge-tools/packages/language-se
 import ts = require("typescript");
 import { DocumentSnapshot } from "../../vendored/langauge-tools/packages/language-server/src/plugins/typescript/DocumentSnapshot";
 import { knownLibFilesForCompilerOptions } from "../../vendored/tsvfs";
+import { URI } from "vscode-uri";
+import { Uri } from "vscode";
 
 export interface LSOptions {
   /**
@@ -422,6 +427,60 @@ function startServer(options?: LSOptions) {
         return null;
       }
     }
+  });
+
+  connection.onRequest("$/getBundle", async (uri: string) => {
+    const rootDoc = docManager.get(uri);
+    if (!rootDoc) return null;
+
+    async function getCompiled(uri:string):Promise<string|null>{
+      const doc = docManager.get(uri);
+      if(!doc) return null;
+      const compiled = await sveltePlugin.getCompiledResult(doc);
+      return compiled?.js;
+    }
+    const pluginPrefix='SFC:'
+    const prx = (s:string)=>pluginPrefix+s;
+    const unprx = (s:string)=>s.slice(pluginPrefix.length);
+
+    const bundled = await uniroll.bundle({input: uri, files:{} ,extraPlugins:[{
+      name:'svelte-fetch-compiled',
+      async resolveId(source, importer){
+        if(source.startsWith('http')|| importer?.startsWith('http')){
+          return null;
+        }
+        if(docManager.get(source)){
+          return prx(source);
+        }
+        if(importer?.startsWith(pluginPrefix) && (source.startsWith('.') || source.startsWith('/'))){
+          const impPath = URI.parse(unprx(importer)).fsPath;
+          const joined = path.join(path.dirname(impPath),source);
+          return prx(joined)
+        }
+        return null;
+      },
+      async load(id):Promise<string | null>{
+        
+        if(id.startsWith(pluginPrefix)){
+          const clean = unprx(id)
+          if (id.endsWith('.svelte'))return getCompiled(clean);
+          const fsPath = URI.parse(clean).fsPath;
+          for(const ext of ['.ts','.d.ts','js']){
+            if(ts.sys.fileExists(fsPath+ext)){
+              let content = ts.sys.readFile(fsPath+ext) as string;
+              if(ext!=='.js'){
+                content = ts.transpileModule(content,{}).outputText;
+              }
+              return content
+            }
+          }
+          
+        } 
+        return null;
+      }
+    }]})
+    const out = await bundled.generate({ format: "iife",name:"__Comp" });
+    return out.output[0].code
   });
 
   connection.listen();
