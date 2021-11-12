@@ -442,8 +442,7 @@ function addBundleCommand(getLS: () => LanguageClient, context: ExtensionContext
         })
        
         const assrc= 'data:text/javascript;base64,'+btoa(bundle)
-        panel.webview.html = ` 
-        <!DOCTYPE html>
+        panel.webview.html = ` <!DOCTYPE html>
 <html>
 <head>
     <meta charset='utf-8'>
