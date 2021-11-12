@@ -10,6 +10,6 @@ rm -rf dist
 npm run compile
 newver=$(npm version patch -m "[ci skip] %s")
 git push
-git push --tags
+git push origin --tags
 
 vsce publish
