@@ -32,7 +32,6 @@ import {
   WorkspaceEdit,
 } from "vscode";
 
-
 import { activateTagClosing } from "../../vendored/langauge-tools/packages/svelte-vscode/src/html/autoClose";
 import { EMPTY_ELEMENTS } from "../../vendored/langauge-tools/packages/svelte-vscode/src/html/htmlEmptyTagsShared";
 import CompiledCodeContentProvider from "../../vendored/langauge-tools/packages/svelte-vscode/src/CompiledCodeContentProvider";
@@ -203,7 +202,11 @@ export async function activate(context: ExtensionContext) {
 }
 
 async function getClientOptions(context: ExtensionContext): Promise<LanguageClientOptions> {
-  const filesys = await readDirToDict(workspace.workspaceFolders?.map(x=>x.uri)??[], [".svelte", ".ts", "tsconfig.json"])
+  const filesys = await readDirToDict(workspace.workspaceFolders?.map((x) => x.uri) ?? [], [
+    ".svelte",
+    ".ts",
+    "tsconfig.json",
+  ]);
   let tsconfigContent = JSON.stringify({
     compilerOptions: {
       lib: ["DOM", "ES2015"],
@@ -212,26 +215,25 @@ async function getClientOptions(context: ExtensionContext): Promise<LanguageClie
       rootDir: "/",
     },
   });
-  if(workspace.workspaceFolders?.length){
-    const tspath= Uri.joinPath(workspace.workspaceFolders[0].uri,'tsconfig.json')
-    if(filesys[tspath.path]){
+  if (workspace.workspaceFolders?.length) {
+    const tspath = Uri.joinPath(workspace.workspaceFolders[0].uri, "tsconfig.json");
+    if (filesys[tspath.path]) {
       tsconfigContent = filesys[tspath.path];
     }
   }
-  filesys['/tsconfig.json'] = tsconfigContent;
-  filesys['/node_modules/svelte/index.d.ts'] = 'export * from "/node_modules/svelte/types/runtime/index"'
-  const allLibs = await fetch(Uri.joinPath(context.extensionUri, "dist/allLibs.json").toString()).then(x=>x.json())
-  for(const [lib, content] of Object.entries(allLibs.svelte)){
-    filesys['/node_modules/svelte/'+lib] = content as string
+  filesys["/tsconfig.json"] = tsconfigContent;
+  filesys["/node_modules/svelte/index.d.ts"] = 'export * from "/node_modules/svelte/types/runtime/index"';
+  const allLibs = await fetch(Uri.joinPath(context.extensionUri, "dist/allLibs.json").toString()).then((x) => x.json());
+  for (const [lib, content] of Object.entries(allLibs.svelte)) {
+    filesys["/node_modules/svelte/" + lib] = content as string;
   }
-  for(const [lib, content] of Object.entries(allLibs.svelte2tsx)){
-    filesys['/'+lib] = content as string
+  for (const [lib, content] of Object.entries(allLibs.svelte2tsx)) {
+    filesys["/" + lib] = content as string;
   }
-  for(const [lib, content] of Object.entries(allLibs.tslibs)){
-    filesys['/'+lib] = content as string
+  for (const [lib, content] of Object.entries(allLibs.tslibs)) {
+    filesys["/" + lib] = content as string;
   }
-  
-  
+
   return {
     // ignore schema like in https://github.com/microsoft/vscode/blob/main/extensions/json-language-features/client/src/jsonClient.ts
     documentSelector: ["svelte"],
@@ -240,19 +242,20 @@ async function getClientOptions(context: ExtensionContext): Promise<LanguageClie
       configurationSection: ["svelte", "javascript", "typescript", "prettier"],
       fileEvents: workspace.createFileSystemWatcher("{**/*.js,**/*.ts,**/*.svelte}", false, false, false),
     },
-    initializationOptions: 
-      {
-        configuration: JSON.parse(JSON.stringify({
+    initializationOptions: {
+      configuration: JSON.parse(
+        JSON.stringify({
           svelte: workspace.getConfiguration("svelte"),
           prettier: workspace.getConfiguration("prettier"),
           emmet: workspace.getConfiguration("emmet"),
           typescript: workspace.getConfiguration("typescript"),
           javascript: workspace.getConfiguration("javascript"),
-        })),
-        filesys,
-        dontFilterIncompleteCompletions: true, // VSCode filters client side and is smarter at it than us
-        isTrusted: (workspace as any).isTrusted,
-      }
+        })
+      ),
+      filesys,
+      dontFilterIncompleteCompletions: true, // VSCode filters client side and is smarter at it than us
+      isTrusted: (workspace as any).isTrusted,
+    },
   };
 }
 
@@ -412,17 +415,17 @@ async function readDirToDict(paths: Uri[], extensions: string[]) {
       console.warn("error while getting initial fs", error);
     }
   }
-  for(const pathUri of paths){
+  for (const pathUri of paths) {
     await walk(pathUri, async (foundPath) => {
-      if (nFiles > 1000 || size > 10e6) { 
+      if (nFiles > 1000 || size > 10e6) {
         throw thatsTooMuchMan;
       }
       const content = await workspace.fs.readFile(foundPath).then((x) => new TextDecoder().decode(x));
       res[foundPath.path] = content;
       size += content.length;
       nFiles += 1;
-    }).catch(e=>{
-      if(e === thatsTooMuchMan)return res;
+    }).catch((e) => {
+      if (e === thatsTooMuchMan) return res;
     });
   }
   return res;
@@ -434,29 +437,33 @@ function addBundleCommand(getLS: () => LanguageClient, context: ExtensionContext
       if (editor?.document?.languageId !== "svelte") {
         return;
       }
-      const uid =  [...Array(30)].map(() => Math.random().toString(36)[2]).join('');
+      const uid = [...Array(30)].map(() => Math.random().toString(36)[2]).join("");
       window.withProgress({ location: ProgressLocation.Window, title: "Bundling..." }, async () => {
-        const uriStart= editor.document.uri.toString()
-        
-        const panel = window.createWebviewPanel("svelteweb.replpreviewweb."+uid, "Bundled "+uriStart.split('/').slice(-1)[0],ViewColumn.Beside,
-        {
-          enableScripts:true,
-          retainContextWhenHidden:true
-        })
+        const uriStart = editor.document.uri.toString();
+
+        const panel = window.createWebviewPanel(
+          "svelteweb.replpreviewweb." + uid,
+          "Bundled " + uriStart.split("/").slice(-1)[0],
+          ViewColumn.Beside,
+          {
+            enableScripts: true,
+            retainContextWhenHidden: true,
+          }
+        );
         panel.onDidChangeViewState(
-          e => {
+          (e) => {
             const panel = e.webviewPanel;
-            setPreviewActiveContext(uid, panel.active)
+            setPreviewActiveContext(uid, panel.active);
           },
           null,
           context.subscriptions
         );
-        panel.onDidDispose(()=>{
-          setPreviewActiveContext(uid, false)
-        })
-        
-        const assrc= 'data:text/javascript;base64,'+btoa(await getLS().sendRequest('$/getBundle',uriStart))
-        function getHtmlComp(){
+        panel.onDidDispose(() => {
+          setPreviewActiveContext(uid, false);
+        });
+
+        const assrc = "data:text/javascript;base64," + btoa(await getLS().sendRequest("$/getBundle", uriStart));
+        function getHtmlComp() {
           return btoa(`
           <!DOCTYPE html>
           <html>
@@ -480,13 +487,13 @@ function addBundleCommand(getLS: () => LanguageClient, context: ExtensionContext
               <div id="main"> </div>
               <script>
               
-              new __Comp({target: document.getElementById('main') })
+              new __Comp["default"]({target: document.getElementById('main') })
               </script>
           </body>
           </html>
-          `)
+          `);
         }
-       
+
         // const assrc= 'data:text/javascript;base64,'+btoa(bundle)
         panel.webview.html = ` <!DOCTYPE html>
 <html>
@@ -499,8 +506,8 @@ function addBundleCommand(getLS: () => LanguageClient, context: ExtensionContext
     <style>
         body,html,iframe{
           border: None;
-          padding:0;
-          margin:0;
+          padding: 0;
+          margin: 0;
           width: 100%;
           height: 100%;
         }
@@ -514,12 +521,11 @@ function addBundleCommand(getLS: () => LanguageClient, context: ExtensionContext
     window.addEventListener('message',(msg)=>{
       const swifrm = document.getElementById('ifrm-sw')
       const vpifrm = document.getElementById('ifrm-viewport')
-      console.log('hmmm', msg)
       if(msg.origin === 'https://asafamr.github.io'){
         if(msg.data === 'swready'){
-          swifrm.contentWindow.postMessage({type:"add", content:atob('${getHtmlComp()}'),url:"https://asafamr.github.io/sw-dev-server/dev/test1", mime:"text/html"}, "*")
+          swifrm.contentWindow.postMessage({type:"add", content:atob('${getHtmlComp()}'),url:"https://asafamr.github.io/sw-dev-server/dev/${uid}", mime:"text/html"}, "*")
         } 
-        if(msg.data === 'synced'){
+        if(msg.data && msg.data.type === 'synced'){
           vpifrm.src = msg.data.url;
           vpifrm.style.visibility = 'initial';
         }
@@ -529,23 +535,24 @@ function addBundleCommand(getLS: () => LanguageClient, context: ExtensionContext
     </script>
 </body>
 </html>
-        `
+        `;
       });
     })
   );
 
-  let actives:string[] = [];
+  let actives: string[] = [];
 
   disposables.push(
-  commands.registerCommand("svelteweb.replbrowser", async (editor) => {
-    if(actives.length>0){
-      env.openExternal(Uri.parse('https://asafamr.github.io/sw-dev-server/dev/'+actives[actives.length-1]));
-    }
-  }))
+    commands.registerCommand("svelteweb.replbrowser", async (editor) => {
+      if (actives.length > 0) {
+        env.openExternal(Uri.parse("https://asafamr.github.io/sw-dev-server/dev/" + actives[actives.length - 1]));
+      }
+    })
+  );
 
-  function setPreviewActiveContext(value: string, active:boolean) {
-    actives = actives.filter(x=>x!=value)
-    if(active)actives.push(value);
-		commands.executeCommand('setContext', 'svelteweb.replactive', actives.join(' '));
-	}
+  function setPreviewActiveContext(value: string, active: boolean) {
+    actives = actives.filter((x) => x != value);
+    if (active) actives.push(value);
+    commands.executeCommand("setContext", "svelteweb.replactive", actives.join(" "));
+  }
 }
