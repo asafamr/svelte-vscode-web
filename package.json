@@ -81,12 +81,21 @@
 				}
 			},
 			{
-				"command": "svelte.extractComponent",
-				"title": "Svelte: Extract Component"
+				"command": "svelteweb.replpreview",
+				"title": "Svelte Web: REPL Preview",
+				"icon": {
+					"light": "./static/repl-right-light.svg",
+					"dark": "./static/repl-right-dark.svg"
+				}
 			},
 			{
-				"command": "svelte.webGetBundled",
-				"title": "SvelteWeb: Get Bundle"
+				"command": "svelteweb.replbrowser",
+				"title": "Svelte Web: Open REPL Preview in Browser",
+				"icon": "$(globe)"
+			},
+			{
+				"command": "svelte.extractComponent",
+				"title": "Svelte: Extract Component"
 			}
 		],
 		"menus": {
@@ -96,7 +105,7 @@
 					"when": "editorLangId == svelte"
 				},
 				{
-					"command": "svelte.webGetBundled",
+					"command": "svelteweb.replpreview",
 					"when": "editorLangId == svelte"
 				}
 			],
@@ -104,6 +113,17 @@
 				{
 					"command": "svelte.showCompiledCodeToSide",
 					"when": "editorLangId == svelte",
+					"group": "navigation"
+				},
+				{
+					"command": "svelteweb.replpreview",
+					"when": "editorLangId == svelte",
+					"group": "navigation"
+				}
+				,
+				{
+					"command": "svelteweb.replbrowser",
+					"when": "isWeb && svelteweb.replactive",
 					"group": "navigation"
 				}
 			],

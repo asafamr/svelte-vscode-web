@@ -15,6 +15,7 @@ import {
 import {
   commands,
   Disposable,
+  env,
   ExtensionContext,
   FileType,
   // extensions,
@@ -30,6 +31,7 @@ import {
   workspace,
   WorkspaceEdit,
 } from "vscode";
+
 
 import { activateTagClosing } from "../../vendored/langauge-tools/packages/svelte-vscode/src/html/autoClose";
 import { EMPTY_ELEMENTS } from "../../vendored/langauge-tools/packages/svelte-vscode/src/html/htmlEmptyTagsShared";
@@ -428,20 +430,64 @@ async function readDirToDict(paths: Uri[], extensions: string[]) {
 
 function addBundleCommand(getLS: () => LanguageClient, context: ExtensionContext) {
   disposables.push(
-    commands.registerTextEditorCommand("svelte.webGetBundled", async (editor) => {
+    commands.registerTextEditorCommand("svelteweb.replpreview", async (editor) => {
       if (editor?.document?.languageId !== "svelte") {
         return;
       }
+      const uid =  [...Array(30)].map(() => Math.random().toString(36)[2]).join('');
       window.withProgress({ location: ProgressLocation.Window, title: "Bundling..." }, async () => {
         const uriStart= editor.document.uri.toString()
-        const bundle = await getLS().sendRequest('$/getBundle',uriStart) as string;
         
-        const panel = window.createWebviewPanel("svelte.bundle", "Bundled "+uriStart,ViewColumn.Beside,
+        const panel = window.createWebviewPanel("svelteweb.replpreviewweb."+uid, "Bundled "+uriStart.split('/').slice(-1)[0],ViewColumn.Beside,
         {
-          enableScripts:true
+          enableScripts:true,
+          retainContextWhenHidden:true
         })
+        panel.onDidChangeViewState(
+          e => {
+            const panel = e.webviewPanel;
+            setPreviewActiveContext(uid, panel.active)
+          },
+          null,
+          context.subscriptions
+        );
+        panel.onDidDispose(()=>{
+          setPreviewActiveContext(uid, false)
+        })
+        
+        const assrc= 'data:text/javascript;base64,'+btoa(await getLS().sendRequest('$/getBundle',uriStart))
+        function getHtmlComp(){
+          return btoa(`
+          <!DOCTYPE html>
+          <html>
+          <head>
+              <meta charset='utf-8'>
+              <meta http-equiv='X-UA-Compatible' content='IE=edge'>
+              <title>Bundle</title>
+              <meta name='viewport' content='width=device-width, initial-scale=1'>
+              <script src='${assrc}'></script>
+              <style>
+                  body,html,iframe{
+                    border: None;
+                    padding:0;
+                    margin:0;
+                    width: 100%;
+                    height: 100%;
+                  }
+              </style>
+          </head>
+          <body>
+              <div id="main"> </div>
+              <script>
+              
+              new __Comp({target: document.getElementById('main') })
+              </script>
+          </body>
+          </html>
+          `)
+        }
        
-        const assrc= 'data:text/javascript;base64,'+btoa(bundle)
+        // const assrc= 'data:text/javascript;base64,'+btoa(bundle)
         panel.webview.html = ` <!DOCTYPE html>
 <html>
 <head>
@@ -449,19 +495,37 @@ function addBundleCommand(getLS: () => LanguageClient, context: ExtensionContext
     <meta http-equiv='X-UA-Compatible' content='IE=edge'>
     <title>Bundle</title>
     <meta name='viewport' content='width=device-width, initial-scale=1'>
-    <script src='${assrc}'></script>
+    
     <style>
-        body,html{
-          border:None;
+        body,html,iframe{
+          border: None;
           padding:0;
           margin:0;
+          width: 100%;
+          height: 100%;
         }
     </style>
 </head>
 <body>
+        <iframe id="ifrm-sw" style="position:absolute; visibility:none" src="https://asafamr.github.io/sw-dev-server/"></iframe>
+        <iframe id="ifrm-viewport"  style="position:absolute; visibility:none" src=""></iframe>
     <div id="main"> </div>
     <script>
-    new __Comp({target: document.getElementById('main') })
+    window.addEventListener('message',(msg)=>{
+      const swifrm = document.getElementById('ifrm-sw')
+      const vpifrm = document.getElementById('ifrm-viewport')
+      console.log('hmmm', msg)
+      if(msg.origin === 'https://asafamr.github.io'){
+        if(msg.data === 'swready'){
+          swifrm.contentWindow.postMessage({type:"add", content:atob('${getHtmlComp()}'),url:"https://asafamr.github.io/sw-dev-server/dev/test1", mime:"text/html"}, "*")
+        } 
+        if(msg.data === 'synced'){
+          vpifrm.src = msg.data.url;
+          vpifrm.style.visibility = 'initial';
+        }
+      }
+      
+    })
     </script>
 </body>
 </html>
@@ -469,4 +533,19 @@ function addBundleCommand(getLS: () => LanguageClient, context: ExtensionContext
       });
     })
   );
+
+  let actives:string[] = [];
+
+  disposables.push(
+  commands.registerCommand("svelteweb.replbrowser", async (editor) => {
+    if(actives.length>0){
+      env.openExternal(Uri.parse('https://asafamr.github.io/sw-dev-server/dev/'+actives[actives.length-1]));
+    }
+  }))
+
+  function setPreviewActiveContext(value: string, active:boolean) {
+    actives = actives.filter(x=>x!=value)
+    if(active)actives.push(value);
+		commands.executeCommand('setContext', 'svelteweb.replactive', actives.join(' '));
+	}
 }
