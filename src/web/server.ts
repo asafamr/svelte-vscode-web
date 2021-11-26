@@ -469,7 +469,7 @@ function startServer(options?: LSOptions) {
             if(ts.sys.fileExists(fsPath+ext)){
               let content = ts.sys.readFile(fsPath+ext) as string;
               if(ext!=='.js'){
-                content = ts.transpileModule(content,{}).outputText;
+                content = ts.transpileModule(content,{compilerOptions:{target:ts.ScriptTarget.ES2015, module:ts.ModuleKind.ES2015}}).outputText;
               }
               return content
             }
@@ -479,7 +479,7 @@ function startServer(options?: LSOptions) {
         return null;
       }
     }]})
-    const out = await bundled.generate({ format: "iife",name:"__Comp" });
+    const out = await bundled.generate({ format: "iife",name:"__Comp" ,exports: 'named'});
     return out.output[0].code
   });
 

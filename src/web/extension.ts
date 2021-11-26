@@ -484,10 +484,9 @@ function addBundleCommand(getLS: () => LanguageClient, context: ExtensionContext
               </style>
           </head>
           <body>
-              <div id="main"> </div>
+          <div id="main"> </div>
               <script>
-              
-              new __Comp["default"]({target: document.getElementById('main') })
+              new __Comp.default({target: document.getElementById('main') })
               </script>
           </body>
           </html>
@@ -514,20 +513,16 @@ function addBundleCommand(getLS: () => LanguageClient, context: ExtensionContext
     </style>
 </head>
 <body>
-        <iframe id="ifrm-sw" style="position:absolute; visibility:none" src="https://asafamr.github.io/sw-dev-server/"></iframe>
-        <iframe id="ifrm-viewport"  style="position:absolute; visibility:none" src=""></iframe>
-    <div id="main"> </div>
+        <iframe id="ifrm-sw" src="https://asafamr.github.io/sw-dev-server/"></iframe>
     <script>
     window.addEventListener('message',(msg)=>{
-      const swifrm = document.getElementById('ifrm-sw')
-      const vpifrm = document.getElementById('ifrm-viewport')
+      const ifrm = document.getElementById('ifrm-sw')
       if(msg.origin === 'https://asafamr.github.io'){
         if(msg.data === 'swready'){
-          swifrm.contentWindow.postMessage({type:"add", content:atob('${getHtmlComp()}'),url:"https://asafamr.github.io/sw-dev-server/dev/${uid}", mime:"text/html"}, "*")
+          ifrm.contentWindow.postMessage({type:"add", content:atob('${getHtmlComp()}'),url:"https://asafamr.github.io/sw-dev-server/dev/${uid}", mime:"text/html"}, "*")
         } 
         if(msg.data && msg.data.type === 'synced'){
-          vpifrm.src = msg.data.url;
-          vpifrm.style.visibility = 'initial';
+          console.debug('bundle webview: synced recived');
         }
       }
       
