@@ -117,13 +117,13 @@
 		"dev-watch": "node -r esbuild-register build.ts --dev",
 		"compile": "npm run bootstrap && rm -rf ./dist && node -r esbuild-register build.ts",
 		"bootstrap": "cd vendored/langauge-tools/packages/svelte-vscode && npm run build:grammar",
-		"run-in-browser": "vscode-test-web --browserType=chromium --extensionDevelopmentPath=. test",
-		"run-in-browser:ff": "vscode-test-web --browserType=firefox --extensionDevelopmentPath=. test",
+		"run-in-browser": "vscode-test-web --version=stable --browserType=chromium --extensionDevelopmentPath=. test",
+		"run-in-browser:ff": "vscode-test-web --version=stable --browserType=firefox --extensionDevelopmentPath=. test",
 		"vscode:prepublish": "npm run compile",
 		"vspub": "vsce publish",
 		"build:test": "node -r esbuild-register build-test.ts",
-		"test": "npm run build:test && vscode-test-web --browserType=chromium --extensionDevelopmentPath=. --extensionTestsPath=dist/web/test/suite/index.js test",
-		"test:full-headless": "npm run build:test && vscode-test-web --headless --browserType=chromium --extensionDevelopmentPath=. --extensionTestsPath=dist/web/test/suite/index.js test && vscode-test-web --headless --browserType=firefox --extensionDevelopmentPath=. --extensionTestsPath=dist/web/test/suite/index.js test",
+		"test": "npm run build:test && vscode-test-web --version=stable --browserType=chromium --extensionDevelopmentPath=. --extensionTestsPath=dist/web/test/suite/index.js test",
+		"test:full-headless": "npm run build:test && vscode-test-web --headless --version=stable --browserType=chromium --extensionDevelopmentPath=. --extensionTestsPath=dist/web/test/suite/index.js test && vscode-test-web --headless --version=stable --browserType=firefox --extensionDevelopmentPath=. --extensionTestsPath=dist/web/test/suite/index.js test",
 		"test-cleaner-output": "npm run test | grep -v \"GET /\""
 	},
 	"devDependencies": {
