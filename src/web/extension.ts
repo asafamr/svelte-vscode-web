@@ -32,6 +32,8 @@ import {
   WorkspaceEdit,
 } from "vscode";
 
+import {debounce} from "lodash-es";
+
 import { activateTagClosing } from "../../vendored/langauge-tools/packages/svelte-vscode/src/html/autoClose";
 import { EMPTY_ELEMENTS } from "../../vendored/langauge-tools/packages/svelte-vscode/src/html/htmlEmptyTagsShared";
 import CompiledCodeContentProvider from "../../vendored/langauge-tools/packages/svelte-vscode/src/CompiledCodeContentProvider";
@@ -89,6 +91,7 @@ export async function activate(context: ExtensionContext) {
   disposables.push(disposable);
 
   ls.onReady().then(() => {
+    commands.executeCommand("setContext", "svelteweb.lsready", "1");
     console.log("svelte-web-ext server is ready");
 
     const tagRequestor = (document: TextDocument, position: Position) => {
@@ -113,12 +116,14 @@ export async function activate(context: ExtensionContext) {
     }
 
     restartingLs = true;
+    commands.executeCommand("setContext", "svelteweb.lsready", "0");
     await ls.stop();
     dispose();
     ls = createWorkerLanguageClient(context, await getClientOptions(context));
     lsDisposable = ls.start();
     disposables.push(lsDisposable);
     await ls.onReady();
+    commands.executeCommand("setContext", "svelteweb.lsready", "1");
     if (showNotification) {
       window.showInformationMessage("Svelte language server restarted.");
     }
@@ -437,6 +442,7 @@ function addBundleCommand(getLS: () => LanguageClient, context: ExtensionContext
       if (editor?.document?.languageId !== "svelte") {
         return;
       }
+      let panelDisposables:Disposable[] = [];
       const uid = [...Array(30)].map(() => Math.random().toString(36)[2]).join("");
       window.withProgress({ location: ProgressLocation.Window, title: "Bundling..." }, async () => {
         const uriStart = editor.document.uri.toString();
@@ -456,15 +462,13 @@ function addBundleCommand(getLS: () => LanguageClient, context: ExtensionContext
             setPreviewActiveContext(uid, panel.active);
           },
           null,
-          context.subscriptions
+          panelDisposables
         );
-        panel.onDidDispose(() => {
-          setPreviewActiveContext(uid, false);
-        });
+        
 
+        async function getHtmlComp() {
         const assrc = "data:text/javascript;base64," + btoa(await getLS().sendRequest("$/getBundle", uriStart));
-        function getHtmlComp() {
-          return btoa(`
+        return `
           <!DOCTYPE html>
           <html>
           <head>
@@ -490,8 +494,28 @@ function addBundleCommand(getLS: () => LanguageClient, context: ExtensionContext
               </script>
           </body>
           </html>
-          `);
+          `;
         }
+        const updateView = debounce(()=>{
+          setTimeout(async ()=>panel.webview.postMessage({type:"add", content:await getHtmlComp(),url:"https://asafamr.github.io/sw-dev-server/dev/"+uid, mime:"text/html"}))
+        }, 30)
+        workspace.onDidChangeTextDocument((evt) => {
+          if (evt.document.languageId === "typescript" || evt.document.languageId === "javascript" || evt.document.languageId === "svelte") {
+            updateView()
+          }
+        },undefined, panelDisposables);
+
+        panel.onDidDispose(() => {
+          setPreviewActiveContext(uid, false);
+          for(const d of panelDisposables){
+            d.dispose()
+          }
+        }, undefined, panelDisposables);
+        panel.webview.onDidReceiveMessage(msg=>{
+          if(msg === 'swready'){
+            updateView()
+          }
+        },undefined, panelDisposables);
 
         // const assrc= 'data:text/javascript;base64,'+btoa(bundle)
         panel.webview.html = ` <!DOCTYPE html>
@@ -503,6 +527,9 @@ function addBundleCommand(getLS: () => LanguageClient, context: ExtensionContext
     <meta name='viewport' content='width=device-width, initial-scale=1'>
     
     <style>
+    html{
+      background-color: white;
+    }
         body,html,iframe{
           border: None;
           padding: 0;
@@ -513,21 +540,20 @@ function addBundleCommand(getLS: () => LanguageClient, context: ExtensionContext
     </style>
 </head>
 <body>
-        <iframe id="ifrm-sw" src="https://asafamr.github.io/sw-dev-server/"></iframe>
     <script>
-    window.addEventListener('message',(msg)=>{
-      const ifrm = document.getElementById('ifrm-sw')
-      if(msg.origin === 'https://asafamr.github.io'){
-        if(msg.data === 'swready'){
-          ifrm.contentWindow.postMessage({type:"add", content:atob('${getHtmlComp()}'),url:"https://asafamr.github.io/sw-dev-server/dev/${uid}", mime:"text/html"}, "*")
-        } 
-        if(msg.data && msg.data.type === 'synced'){
-          console.debug('bundle webview: synced recived');
+    const vscode = acquireVsCodeApi();
+    window.addEventListener('message', (msg)=>{
+      if(msg.data && msg.origin === 'https://asafamr.github.io'){
+        vscode.postMessage(msg.data);
+      }else{
+        if(msg.data && msg.data.type==='add'){
+          const ifrm = document.getElementById('ifrm-sw');
+          ifrm.contentWindow.postMessage(msg.data, "*");
         }
       }
-      
     })
     </script>
+    <iframe id="ifrm-sw" src="https://asafamr.github.io/sw-dev-server/"></iframe>
 </body>
 </html>
         `;

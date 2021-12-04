@@ -117,13 +117,12 @@
 				},
 				{
 					"command": "svelteweb.replpreview",
-					"when": "editorLangId == svelte",
+					"when": "svelteweb.lsready == '1' && editorLangId == svelte",
 					"group": "navigation"
-				}
-				,
+				},
 				{
 					"command": "svelteweb.replbrowser",
-					"when": "isWeb && svelteweb.replactive",
+					"when": "isWeb && svelteweb.lsready == '1' && svelteweb.replactive",
 					"group": "navigation"
 				}
 			],
@@ -150,8 +149,8 @@
 		"vscode:prepublish": "npm run compile",
 		"vspub": "vsce publish",
 		"build:test": "node -r esbuild-register build-test.ts",
-		"test": "npm run build:test && vscode-test-web --browserType=chromium --extensionDevelopmentPath=. --extensionTestsPath=dist/web/test/suite/index.js test",
-		"test:full-headless": "npm run build:test && vscode-test-web --headless --browserType=chromium --extensionDevelopmentPath=. --extensionTestsPath=dist/web/test/suite/index.js test && vscode-test-web --headless --browserType=firefox --extensionDevelopmentPath=. --extensionTestsPath=dist/web/test/suite/index.js test",
+		"test": "npm run build:test && vscode-test-web --browserType=chromium --version=stable --extensionDevelopmentPath=. --extensionTestsPath=dist/web/test/suite/index.js test",
+		"test:full-headless": "npm run build:test && vscode-test-web --version=stable --headless --browserType=chromium --extensionDevelopmentPath=. --extensionTestsPath=dist/web/test/suite/index.js test && vscode-test-web --headless --browserType=firefox --extensionDevelopmentPath=. --extensionTestsPath=dist/web/test/suite/index.js test",
 		"test-cleaner-output": "npm run test | grep -v \"GET /\""
 	},
 	"devDependencies": {
@@ -159,6 +158,7 @@
 		"@tsconfig/node12": "^1.0.9",
 		"@types/chai": "^4.2.22",
 		"@types/fs-extra": "^9.0.13",
+		"@types/lodash-es": "^4.17.5",
 		"@types/lz-string": "^1.3.34",
 		"@types/mocha": "^9.0.0",
 		"@types/prettier": "^2.4.1",
